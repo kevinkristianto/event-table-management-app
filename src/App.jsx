@@ -6,6 +6,7 @@ import GuestForm from './components/GuestForm';
 
 const App = () => {
   const [mode, setMode] = useState('build');
+  const layout = JSON.parse(localStorage.getItem("layout") || "[]");
 
   return (
     <div style={{ padding: 20 }}>
@@ -19,7 +20,7 @@ const App = () => {
       <GuestForm />
 
       {mode === 'build' && <BuildMode />}
-      {mode === 'edit' && <EditMode />}
+      {mode === 'edit' && <EditMode elements={layout} />}
       {mode === 'view' && <ViewMode />}
     </div>
   );

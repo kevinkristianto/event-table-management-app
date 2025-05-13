@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { getGuests, getLayout } from '../utils/storage';
+import { getGuests, getLayouts } from '../utils/storage';
 
 const ViewMode = () => {
-  const layout = getLayout();
+  const layout = getLayouts();
   const guests = getGuests();
   const [selectedGuest, setSelectedGuest] = useState(null);
 

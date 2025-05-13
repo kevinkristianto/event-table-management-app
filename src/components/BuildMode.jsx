@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './BuildMode.css';
+import { saveLayout } from '../utils/storage';
 
 const TABLE_SIZE = 60;
 const CHAIR_SIZE = 30;
@@ -11,6 +12,7 @@ const BuildMode = () => {
   const [selectedTables, setSelectedTables] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editingName, setEditingName] = useState('');
+  const [layoutName, setLayoutName] = useState('');
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -115,6 +117,19 @@ const BuildMode = () => {
     setElements(elements.filter((el) => el.id !== id));
   };
 
+  const handleSaveLayout = () => {
+    if (layoutName.trim() === "") {
+      alert("Please enter a layout name.");
+      return;
+    }
+
+    saveLayout({
+      name: layoutName,
+      elements: elements,
+    });
+    alert("Layout saved successfully!");
+  };
+
   return (
     <div className="build-mode">
       <h2>Build Mode</h2>
@@ -123,6 +138,15 @@ const BuildMode = () => {
         {selectedTables.length >= 2 && (
           <button onClick={joinTables}>Join Tables</button>
         )}
+        <div>
+          <input
+            type="text"
+            placeholder="Enter layout name"
+            value={layoutName}
+            onChange={(e) => setLayoutName(e.target.value)}
+          />
+          <button onClick={handleSaveLayout}>Save Layout</button>
+        </div>
       </div>
 
       <div className="canvas" ref={canvasRef}>
