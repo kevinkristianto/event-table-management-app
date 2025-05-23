@@ -1,11 +1,11 @@
 # Table Management App (React)
 
-A simple table management tool with build, edit, and view modes. Data is saved locally using `localStorage`.
+A simple table management tool with build, edit, and view modes. Data is saved locally using `SQLite`.
 
 ## Features
 
-- **Build Mode**: Add tables with seats
-- **Guest Form**: Add guest name, menu (A/B), and allergy
+- **Build Mode**: Add layout for venue (tables and seats), assigning name for each tables and seats
+- **Guest Form**: Add guest name, menu selection, and allergy
 - **Edit Mode**: Assign guests to seats
 - **View Mode**: Click seats to view guest info
 
