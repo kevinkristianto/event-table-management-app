@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './BuildMode.css';
-import { saveLayout } from '../utils/storage';
-
-const TABLE_SIZE = 60;
-const CHAIR_SIZE = 30;
+import { fetchLayoutNames, fetchLayoutByName, saveLayout } from '../services/layoutService';
+import {
+  createNewElement,
+  updateElementPosition,
+  toggleTableSelection,
+  joinTables as joinTablesService,
+  applyNameEdit,
+  deleteElementById,
+} from '../services/propertiesBuildService';
 
 const BuildMode = () => {
   const [elements, setElements] = useState([]);
@@ -13,45 +18,32 @@ const BuildMode = () => {
   const [editingId, setEditingId] = useState(null);
   const [editingName, setEditingName] = useState('');
   const [layoutName, setLayoutName] = useState('');
+  const [savedLayouts, setSavedLayouts] = useState([]);
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem('layout');
-    if (saved) {
-      setElements(JSON.parse(saved));
-    }
-  }, []);
+    const loadLayoutNames = async () => {
+      try {
+        const names = await fetchLayoutNames();
+        setSavedLayouts(names);
+      } catch (err) {
+        console.error('Error fetching layouts', err);
+      }
+    };
 
-  useEffect(() => {
-    localStorage.setItem('layout', JSON.stringify(elements));
-  }, [elements]);
+    loadLayoutNames();
+  }, []);
 
   const addElement = () => {
     const canvasRect = canvasRef.current.getBoundingClientRect();
-    const newElement = {
-      id: Date.now(),
-      type: selectedType,
-      name: '',
-      x: canvasRect.width / 2 - 20,
-      y: canvasRect.height / 2 - 20,
-      width: selectedType === 'table' ? TABLE_SIZE : CHAIR_SIZE,
-      height: selectedType === 'table' ? TABLE_SIZE : CHAIR_SIZE,
-    };
+    const newElement = createNewElement(selectedType, canvasRect);
     setElements([...elements, newElement]);
     setShowModal(false);
   };
 
   const handleDrag = (id, e) => {
-    const canvas = canvasRef.current.getBoundingClientRect();
-    const updated = elements.map((el) =>
-      el.id === id
-        ? {
-            ...el,
-            x: e.clientX - canvas.left - el.width / 2,
-            y: e.clientY - canvas.top - el.height / 2,
-          }
-        : el
-    );
+    const canvasRect = canvasRef.current.getBoundingClientRect();
+    const updated = updateElementPosition(elements, id, e.clientX, e.clientY, canvasRect);
     setElements(updated);
   };
 
@@ -66,36 +58,14 @@ const BuildMode = () => {
   };
 
   const toggleSelect = (el) => {
-    if (el.type !== 'table') return;
-    setSelectedTables((prev) =>
-      prev.find((t) => t.id === el.id)
-        ? prev.filter((t) => t.id !== el.id)
-        : [...prev, el]
-    );
+    const updatedSelection = toggleTableSelection(selectedTables, el);
+    setSelectedTables(updatedSelection);
   };
 
   const joinTables = () => {
-    if (selectedTables.length < 2) return;
-
-    const totalWidth = TABLE_SIZE * selectedTables.length;
-    const midY = selectedTables.reduce((sum, t) => sum + t.y, 0) / selectedTables.length;
-    const midX = selectedTables.reduce((sum, t) => sum + t.x, 0) / selectedTables.length;
-
-    const newTable = {
-      id: Date.now(),
-      type: 'table',
-      name: '',
-      x: midX,
-      y: midY,
-      width: totalWidth,
-      height: TABLE_SIZE,
-      joinedFrom: selectedTables.map((t) => t.id),
-    };
-
-    setElements((prev) =>
-      [...prev.filter((el) => !selectedTables.find((t) => t.id === el.id)), newTable]
-    );
-    setSelectedTables([]);
+    const { updatedElements, newSelectedTables } = joinTablesService(elements, selectedTables);
+    setElements(updatedElements);
+    setSelectedTables(newSelectedTables);
   };
 
   const handleDoubleClick = (el) => {
@@ -104,61 +74,86 @@ const BuildMode = () => {
   };
 
   const applyEdit = () => {
-    setElements((prev) =>
-      prev.map((el) =>
-        el.id === editingId ? { ...el, name: editingName } : el
-      )
-    );
+    setElements(applyNameEdit(elements, editingId, editingName));
     setEditingId(null);
     setEditingName('');
   };
 
   const deleteElement = (id) => {
-    setElements(elements.filter((el) => el.id !== id));
+    setElements(deleteElementById(elements, id));
   };
 
-  const handleSaveLayout = () => {
-    if (layoutName.trim() === "") {
-      alert("Please enter a layout name.");
+  const handleSaveLayout = async () => {
+    if (!layoutName.trim()) {
+      alert('Please enter a layout name');
       return;
     }
 
-    saveLayout({
-      name: layoutName,
-      elements: elements,
-    });
-    alert("Layout saved successfully!");
+    try {
+      await saveLayout(layoutName.trim(), elements);
+      alert('Layout saved!');
+      const names = await fetchLayoutNames();
+      setSavedLayouts(names);
+    } catch (err) {
+      console.error('Error saving layout', err);
+      alert('Failed to save layout');
+    }
+  };
+
+  const handleLoadLayout = async (name) => {
+    try {
+      const loadedElements = await fetchLayoutByName(name);
+      setElements(loadedElements);
+    } catch (err) {
+      console.error('Failed to load layout', err);
+    }
   };
 
   return (
     <div className="build-mode">
       <h2>Build Mode</h2>
-      <div style={{ display: 'flex', gap: '10px' }}>
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
         <button onClick={() => setShowModal(true)}>Add Properties</button>
         {selectedTables.length >= 2 && (
           <button onClick={joinTables}>Join Tables</button>
         )}
-        <div>
-          <input
-            type="text"
-            placeholder="Enter layout name"
-            value={layoutName}
-            onChange={(e) => setLayoutName(e.target.value)}
-          />
-          <button onClick={handleSaveLayout}>Save Layout</button>
-        </div>
+
+        <input
+          type="text"
+          placeholder="Enter layout name"
+          value={layoutName}
+          onChange={(e) => setLayoutName(e.target.value)}
+        />
+        <button onClick={handleSaveLayout} disabled={!layoutName.trim()}>
+          Save Layout
+        </button>
+
+        <select onChange={(e) => handleLoadLayout(e.target.value)} defaultValue="">
+          <option value="" disabled>
+            Load Layout
+          </option>
+          {savedLayouts.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="canvas" ref={canvasRef}>
         {elements.map((el) => (
           <div
             key={el.id}
-            className={`element ${el.type} ${selectedTables.find((t) => t.id === el.id) ? 'selected' : ''}`}
+            className={`element ${el.type} ${
+              selectedTables.find((t) => t.id === el.id) ? 'selected' : ''
+            }`}
             style={{
               left: el.x,
               top: el.y,
               width: el.width,
               height: el.height,
+              position: 'absolute',
+              cursor: 'pointer',
             }}
             onMouseDown={() => handleMouseDown(el.id)}
             onClick={() => toggleSelect(el)}
@@ -207,7 +202,10 @@ const BuildMode = () => {
               </button>
             </div>
             <button onClick={addElement}>Add {selectedType}</button>
-            <button onClick={() => setShowModal(false)} style={{ marginTop: '10px' }}>
+            <button
+              onClick={() => setShowModal(false)}
+              style={{ marginTop: '10px' }}
+            >
               Cancel
             </button>
           </div>

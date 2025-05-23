@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './EditMode.css';
-import {
-  getLayoutByName,
-  getLayoutNames,
-  getGuests,
-  saveGuest
-} from '../utils/storage';
+import axios from 'axios';
+import { fetchLayoutNames, fetchLayoutByName } from '../services/layoutService';
+
 
 const EditMode = () => {
   const [layout, setLayout] = useState([]);
@@ -18,9 +15,18 @@ const EditMode = () => {
   const [selectedLayoutName, setSelectedLayoutName] = useState('');
 
   useEffect(() => {
-    const guests = getGuests();
-    setAllGuests(guests);
+    fetchGuests();
   }, []);
+
+  const fetchGuests = async () => {
+    try {
+      const res = await axios.get('http://localhost:3001/api/guests');
+      const guestNames = res.data.map(g => g.name);
+      setAllGuests(guestNames);
+    } catch (err) {
+      console.error('Failed to fetch guests', err);
+    }
+  };
 
   const handleGuestInput = (e) => {
     const value = e.target.value;
@@ -35,30 +41,52 @@ const EditMode = () => {
     setGuestSuggestions(suggestions);
   };
 
-  const handleAssignGuest = (name) => {
-    setLayout((prev) =>
-      prev.map(el =>
-        el.id === selectedSeatId ? { ...el, guest: name } : el
-      )
-    );
-    saveGuest(name);
-    setGuestName('');
-    setGuestSuggestions([]);
-    setSelectedSeatId(null);
+  const handleAssignGuest = async (name) => {
+    try {
+      // Update local layout state
+      setLayout(prevLayout =>
+        prevLayout.map(el =>
+          el.id === selectedSeatId ? { ...el, guest: name } : el
+        )
+      );
+
+      // Save guest to backend (expand payload as needed)
+      await axios.post('http://localhost:3001/api/guests', {
+        name,
+        menu: '',
+        allergies: []
+      });
+
+      setGuestName('');
+      setGuestSuggestions([]);
+      setSelectedSeatId(null);
+    } catch (err) {
+      console.error('Failed to save guest', err);
+    }
   };
 
-  const handleLoadLayoutClick = () => {
-    const names = getLayoutNames();
-    setAvailableLayouts(names);
-    setShowLayoutModal(true);
+  const handleLoadLayoutClick = async () => {
+    try {
+      const names = await fetchLayoutNames();
+      setAvailableLayouts(names);
+      setShowLayoutModal(true);
+    } catch (err) {
+      console.error('Failed to fetch layout names', err);
+    }
   };
+  
 
-  const handleLoadLayout = () => {
+  const handleLoadLayout = async () => {
     if (!selectedLayoutName) return;
-    const layoutData = getLayoutByName(selectedLayoutName);
-    setLayout(layoutData);
-    setShowLayoutModal(false);
+    try {
+      const loadedLayout = await fetchLayoutByName(selectedLayoutName);
+      setLayout(loadedLayout);
+      setShowLayoutModal(false);
+    } catch (err) {
+      console.error('Failed to load layout', err);
+    }
   };
+  
 
   return (
     <div className="edit-mode">
