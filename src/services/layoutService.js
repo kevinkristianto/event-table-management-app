@@ -4,7 +4,7 @@ const API_BASE_URL = 'http://localhost:5000/api';
 
 export const fetchLayoutNames = async () => {
   const res = await axios.get(`${API_BASE_URL}/layouts`);
-  return res.data; 
+  return res.data;
 };
 
 export const fetchLayoutByName = async (name) => {

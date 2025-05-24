@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './BuildMode.css';
-import { fetchLayoutNames, fetchLayoutByName, saveLayout } from '../services/layoutService';
+import {
+  fetchLayoutNames,
+  fetchLayoutByName,
+  saveLayout,
+} from '../services/layoutService';
 import {
   createNewElement,
   updateElementPosition,
@@ -43,7 +47,13 @@ const BuildMode = () => {
 
   const handleDrag = (id, e) => {
     const canvasRect = canvasRef.current.getBoundingClientRect();
-    const updated = updateElementPosition(elements, id, e.clientX, e.clientY, canvasRect);
+    const updated = updateElementPosition(
+      elements,
+      id,
+      e.clientX,
+      e.clientY,
+      canvasRect
+    );
     setElements(updated);
   };
 
@@ -63,7 +73,10 @@ const BuildMode = () => {
   };
 
   const joinTables = () => {
-    const { updatedElements, newSelectedTables } = joinTablesService(elements, selectedTables);
+    const { updatedElements, newSelectedTables } = joinTablesService(
+      elements,
+      selectedTables
+    );
     setElements(updatedElements);
     setSelectedTables(newSelectedTables);
   };
@@ -128,7 +141,10 @@ const BuildMode = () => {
           Save Layout
         </button>
 
-        <select onChange={(e) => handleLoadLayout(e.target.value)} defaultValue="">
+        <select
+          onChange={(e) => handleLoadLayout(e.target.value)}
+          defaultValue=""
+        >
           <option value="" disabled>
             Load Layout
           </option>

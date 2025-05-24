@@ -22,12 +22,17 @@ npm install
 ```
 
 ### Running the project locally
+
 For the front-end
+
 ```bash
 npm start
 ```
 
 For the back-end
+
 ```bash
 node index.js
 ```
+
+You need to be in the backend directory to run this command

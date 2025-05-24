@@ -3,7 +3,6 @@ import './EditMode.css';
 import axios from 'axios';
 import { fetchLayoutNames, fetchLayoutByName } from '../services/layoutService';
 
-
 const EditMode = () => {
   const [layout, setLayout] = useState([]);
   const [selectedSeatId, setSelectedSeatId] = useState(null);
@@ -21,7 +20,7 @@ const EditMode = () => {
   const fetchGuests = async () => {
     try {
       const res = await axios.get('http://localhost:3001/api/guests');
-      const guestNames = res.data.map(g => g.name);
+      const guestNames = res.data.map((g) => g.name);
       setAllGuests(guestNames);
     } catch (err) {
       console.error('Failed to fetch guests', err);
@@ -35,7 +34,7 @@ const EditMode = () => {
       setGuestSuggestions([]);
       return;
     }
-    const suggestions = allGuests.filter(g =>
+    const suggestions = allGuests.filter((g) =>
       g.toLowerCase().includes(value.toLowerCase())
     );
     setGuestSuggestions(suggestions);
@@ -44,8 +43,8 @@ const EditMode = () => {
   const handleAssignGuest = async (name) => {
     try {
       // Update local layout state
-      setLayout(prevLayout =>
-        prevLayout.map(el =>
+      setLayout((prevLayout) =>
+        prevLayout.map((el) =>
           el.id === selectedSeatId ? { ...el, guest: name } : el
         )
       );
@@ -54,7 +53,7 @@ const EditMode = () => {
       await axios.post('http://localhost:3001/api/guests', {
         name,
         menu: '',
-        allergies: []
+        allergies: [],
       });
 
       setGuestName('');
@@ -74,7 +73,6 @@ const EditMode = () => {
       console.error('Failed to fetch layout names', err);
     }
   };
-  
 
   const handleLoadLayout = async () => {
     if (!selectedLayoutName) return;
@@ -86,7 +84,6 @@ const EditMode = () => {
       console.error('Failed to load layout', err);
     }
   };
-  
 
   return (
     <div className="edit-mode">
@@ -94,7 +91,7 @@ const EditMode = () => {
       <button onClick={handleLoadLayoutClick}>Load Layout</button>
 
       <div className="canvas">
-        {layout.map(el => (
+        {layout.map((el) => (
           <div
             key={el.id}
             className={`element ${el.type}`}
@@ -102,7 +99,7 @@ const EditMode = () => {
               left: el.x,
               top: el.y,
               width: el.width,
-              height: el.height
+              height: el.height,
             }}
             onClick={() => el.type === 'chair' && setSelectedSeatId(el.id)}
           >
@@ -144,14 +141,19 @@ const EditMode = () => {
             >
               <option value="">-- Select Layout --</option>
               {availableLayouts.map((name, idx) => (
-                <option key={idx} value={name}>{name}</option>
+                <option key={idx} value={name}>
+                  {name}
+                </option>
               ))}
             </select>
             <div style={{ marginTop: '10px' }}>
               <button onClick={handleLoadLayout} disabled={!selectedLayoutName}>
                 Load
               </button>
-              <button onClick={() => setShowLayoutModal(false)} style={{ marginLeft: '10px' }}>
+              <button
+                onClick={() => setShowLayoutModal(false)}
+                style={{ marginLeft: '10px' }}
+              >
                 Cancel
               </button>
             </div>

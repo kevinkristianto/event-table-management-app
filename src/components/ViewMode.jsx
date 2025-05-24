@@ -12,7 +12,10 @@ const ViewMode = () => {
     <div>
       <h2>View Mode</h2>
       {layout.map((table) => (
-        <div key={table.id} style={{ border: '1px solid gray', margin: 10, padding: 10 }}>
+        <div
+          key={table.id}
+          style={{ border: '1px solid gray', margin: 10, padding: 10 }}
+        >
           <h3>Table {table.id}</h3>
           {table.seats.map((seat) => (
             <button
@@ -29,9 +32,15 @@ const ViewMode = () => {
       {selectedGuest && (
         <div style={{ marginTop: 20 }}>
           <h3>Guest Details</h3>
-          <p><strong>Name:</strong> {selectedGuest.name}</p>
-          <p><strong>Menu:</strong> {selectedGuest.menu}</p>
-          <p><strong>Allergy:</strong> {selectedGuest.allergy}</p>
+          <p>
+            <strong>Name:</strong> {selectedGuest.name}
+          </p>
+          <p>
+            <strong>Menu:</strong> {selectedGuest.menu}
+          </p>
+          <p>
+            <strong>Allergy:</strong> {selectedGuest.allergy}
+          </p>
         </div>
       )}
     </div>

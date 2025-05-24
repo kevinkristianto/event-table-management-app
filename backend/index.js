@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const { v4: uuidv4 } = require('uuid');
 const db = require('./models/initDb');
 
 const app = express();
@@ -8,7 +9,7 @@ app.use(express.json());
 
 const PORT = 5000;
 
-// GET all layout names
+// --- Layout routes unchanged ---
 app.get('/api/layouts', (req, res) => {
   const query = `SELECT name FROM layouts`;
   db.all(query, [], (err, rows) => {
@@ -16,12 +17,11 @@ app.get('/api/layouts', (req, res) => {
       console.error('DB error fetching layout names:', err);
       return res.status(500).json({ error: 'Failed to fetch layouts' });
     }
-    const names = rows.map(row => row.name);
+    const names = rows.map((row) => row.name);
     res.json(names);
   });
 });
 
-// GET layout by name
 app.get('/api/layouts/:name', (req, res) => {
   const name = req.params.name;
   const query = `SELECT data FROM layouts WHERE name = ?`;
@@ -33,7 +33,6 @@ app.get('/api/layouts/:name', (req, res) => {
     if (!row) {
       return res.status(404).json({ error: 'Layout not found' });
     }
-    // data is stored as JSON string, parse before sending
     try {
       const data = JSON.parse(row.data);
       res.json({ name, elements: data });
@@ -44,7 +43,6 @@ app.get('/api/layouts/:name', (req, res) => {
   });
 });
 
-// POST save or update layout
 app.post('/api/layouts', (req, res) => {
   const { name, elements } = req.body;
 
@@ -54,7 +52,6 @@ app.post('/api/layouts', (req, res) => {
 
   const dataStr = JSON.stringify(elements);
 
-  // Check if layout exists
   const checkQuery = `SELECT id FROM layouts WHERE name = ?`;
   db.get(checkQuery, [name], (err, row) => {
     if (err) {
@@ -63,9 +60,8 @@ app.post('/api/layouts', (req, res) => {
     }
 
     if (row) {
-      // Update existing
       const updateQuery = `UPDATE layouts SET data = ? WHERE id = ?`;
-      db.run(updateQuery, [dataStr, row.id], function(updateErr) {
+      db.run(updateQuery, [dataStr, row.id], function (updateErr) {
         if (updateErr) {
           console.error('DB error updating layout:', updateErr);
           return res.status(500).json({ error: 'Failed to update layout' });
@@ -73,9 +69,8 @@ app.post('/api/layouts', (req, res) => {
         res.json({ message: 'Layout updated', name });
       });
     } else {
-      // Insert new
       const insertQuery = `INSERT INTO layouts (name, data) VALUES (?, ?)`;
-      db.run(insertQuery, [name, dataStr], function(insertErr) {
+      db.run(insertQuery, [name, dataStr], function (insertErr) {
         if (insertErr) {
           console.error('DB error inserting layout:', insertErr);
           return res.status(500).json({ error: 'Failed to save layout' });
@@ -86,4 +81,207 @@ app.post('/api/layouts', (req, res) => {
   });
 });
 
-app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
+// --- Guest routes ---
+app.post('/api/guests', (req, res) => {
+  const { name, menu = '', allergies = [], steakCook = '' } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ error: 'Guest name is required' });
+  }
+
+  const id = uuidv4();
+  const guestToken = uuidv4();
+
+  const checkQuery = `SELECT * FROM guests WHERE LOWER(name) = LOWER(?)`;
+  db.get(checkQuery, [name], (err, row) => {
+    if (err) {
+      console.error('DB error checking guest existence:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (row) {
+      return res.status(409).json({ error: 'Guest already exists' });
+    }
+
+    const insertQuery = `INSERT INTO guests (id, guestToken, name, menu, allergies, steakCook) VALUES (?, ?, ?, ?, ?, ?)`;
+    db.run(
+      insertQuery,
+      [id, guestToken, name, menu, JSON.stringify(allergies), steakCook],
+      function (insertErr) {
+        if (insertErr) {
+          console.error('DB error inserting guest:', insertErr);
+          return res.status(500).json({ error: 'Failed to save guest' });
+        }
+        res
+          .status(201)
+          .json({ id, guestToken, name, menu, allergies, steakCook });
+      }
+    );
+  });
+});
+
+app.delete('/api/guests/:identifier', (req, res) => {
+  const identifier = req.params.identifier.toLowerCase();
+
+  // Delete guest by guestToken OR id OR name (case-insensitive)
+  const deleteQueryByToken = `DELETE FROM guests WHERE LOWER(guestToken) = ?`;
+  const deleteQueryById = `DELETE FROM guests WHERE id = ?`;
+  const deleteQueryByName = `DELETE FROM guests WHERE LOWER(name) = ?`;
+
+  // First try by guestToken
+  db.run(deleteQueryByToken, [identifier], function (err) {
+    if (err) {
+      console.error('DB error deleting guest by token:', err);
+      return res.status(500).json({ error: 'Failed to delete guest' });
+    }
+    if (this.changes > 0) {
+      return res.json({ message: 'Guest deleted successfully by token' });
+    }
+    // Try by id (only if identifier is numeric)
+    const numericId = parseInt(identifier, 10);
+    if (!isNaN(numericId)) {
+      db.run(deleteQueryById, [numericId], function (err2) {
+        if (err2) {
+          console.error('DB error deleting guest by id:', err2);
+          return res.status(500).json({ error: 'Failed to delete guest' });
+        }
+        if (this.changes > 0) {
+          return res.json({ message: 'Guest deleted successfully by id' });
+        }
+        // Try by name
+        db.run(deleteQueryByName, [identifier], function (err3) {
+          if (err3) {
+            console.error('DB error deleting guest by name:', err3);
+            return res.status(500).json({ error: 'Failed to delete guest' });
+          }
+          if (this.changes > 0) {
+            return res.json({ message: 'Guest deleted successfully by name' });
+          }
+          return res
+            .status(404)
+            .json({ error: 'Guest not found for deletion' });
+        });
+      });
+    } else {
+      // Not numeric id, try name directly
+      db.run(deleteQueryByName, [identifier], function (err3) {
+        if (err3) {
+          console.error('DB error deleting guest by name:', err3);
+          return res.status(500).json({ error: 'Failed to delete guest' });
+        }
+        if (this.changes > 0) {
+          return res.json({ message: 'Guest deleted successfully by name' });
+        }
+        return res.status(404).json({ error: 'Guest not found for deletion' });
+      });
+    }
+  });
+});
+
+app.get('/api/guests', (req, res) => {
+  const query = `SELECT * FROM guests`;
+  db.all(query, [], (err, rows) => {
+    if (err) {
+      console.error('DB error fetching guests:', err);
+      return res.status(500).json({ error: 'Failed to fetch guests' });
+    }
+
+    const guests = rows.map((row) => ({
+      ...row,
+      allergies: row.allergies ? JSON.parse(row.allergies) : [],
+    }));
+
+    res.json(guests);
+  });
+});
+
+app.get('/api/guests/id/:id', (req, res) => {
+  const id = req.params.id; // id is UUID string here
+  const query = `SELECT * FROM guests WHERE id = ?`;
+
+  db.get(query, [id], (err, row) => {
+    if (err) {
+      console.error('DB error fetching guest by id:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    if (!row) {
+      return res.status(404).json({ error: 'Guest not found' });
+    }
+    try {
+      row.allergies = row.allergies ? JSON.parse(row.allergies) : [];
+    } catch {
+      row.allergies = [];
+    }
+    res.json(row);
+  });
+});
+
+app.get('/api/guests/token/:guestToken', (req, res) => {
+  const guestToken = req.params.guestToken;
+  const query = `SELECT * FROM guests WHERE guestToken = ?`;
+
+  db.get(query, [guestToken], (err, row) => {
+    if (err) {
+      console.error('DB error fetching guest by token:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    if (!row) {
+      return res.status(404).json({ error: 'Guest not found' });
+    }
+
+    let allergies = [];
+    try {
+      allergies = JSON.parse(row.allergies || '[]');
+    } catch {
+      allergies = [];
+    }
+
+    res.json({
+      id: row.id,
+      guestToken: row.guestToken,
+      name: row.name,
+      menu: row.menu,
+      allergies,
+      steakCook: row.steakCook,
+    });
+  });
+});
+
+app.put('/api/guests/:guestToken', (req, res) => {
+  const guestToken = req.params.guestToken;
+  const { menu = '', allergies = [], steakCook = null } = req.body;
+
+  const query = `UPDATE guests SET menu = ?, allergies = ?, steakCook = ? WHERE guestToken = ?`;
+  db.run(
+    query,
+    [menu, JSON.stringify(allergies), steakCook, guestToken],
+    function (err) {
+      if (err) {
+        console.error('DB error updating guest:', err);
+        return res.status(500).json({ error: 'Failed to update guest' });
+      }
+
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'Guest not found' });
+      }
+
+      db.get(
+        `SELECT * FROM guests WHERE guestToken = ?`,
+        [guestToken],
+        (err2, row) => {
+          if (err2) {
+            console.error('DB error fetching updated guest:', err2);
+            return res.status(500).json({ error: 'Database error' });
+          }
+
+          row.allergies = row.allergies ? JSON.parse(row.allergies) : [];
+          res.json(row);
+        }
+      );
+    }
+  );
+});
+
+app.listen(PORT, () => {
+  console.log(`Backend running on http://localhost:${PORT}`);
+});

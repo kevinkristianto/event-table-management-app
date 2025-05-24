@@ -8,16 +8,20 @@ db.serialize(() => {
     data TEXT
   )`);
 
+  db.run(`DROP TABLE IF EXISTS guests`);
+
   db.run(`CREATE TABLE IF NOT EXISTS guests (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
+    id TEXT PRIMARY KEY,                
+    guestToken TEXT UNIQUE NOT NULL,  
+    name TEXT NOT NULL,
     menu TEXT,
-    allergies TEXT
+    allergies TEXT,
+    steakCook TEXT
   )`);
 
   db.run(`CREATE TABLE IF NOT EXISTS seat_assignments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    guest_id INTEGER,
+    guest_id TEXT,                     
     layout_id INTEGER,
     seat_id TEXT,
     FOREIGN KEY (guest_id) REFERENCES guests(id),

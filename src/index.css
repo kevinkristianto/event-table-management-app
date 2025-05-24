@@ -9,6 +9,7 @@ button {
   margin: 0 5px;
 }
 
-input, select {
+input,
+select {
   margin-right: 10px;
 }

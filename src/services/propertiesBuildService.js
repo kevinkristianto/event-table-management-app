@@ -6,14 +6,24 @@ export const createNewElement = (type, canvasRect) => {
     id: Date.now(),
     type,
     name: '',
-    x: canvasRect.width / 2 - (type === 'table' ? TABLE_SIZE / 2 : CHAIR_SIZE / 2),
-    y: canvasRect.height / 2 - (type === 'table' ? TABLE_SIZE / 2 : CHAIR_SIZE / 2),
+    x:
+      canvasRect.width / 2 -
+      (type === 'table' ? TABLE_SIZE / 2 : CHAIR_SIZE / 2),
+    y:
+      canvasRect.height / 2 -
+      (type === 'table' ? TABLE_SIZE / 2 : CHAIR_SIZE / 2),
     width: type === 'table' ? TABLE_SIZE : CHAIR_SIZE,
     height: type === 'table' ? TABLE_SIZE : CHAIR_SIZE,
   };
 };
 
-export const updateElementPosition = (elements, id, clientX, clientY, canvasRect) => {
+export const updateElementPosition = (
+  elements,
+  id,
+  clientX,
+  clientY,
+  canvasRect
+) => {
   return elements.map((el) =>
     el.id === id
       ? {
@@ -36,12 +46,16 @@ export const toggleTableSelection = (selectedTables, element) => {
 };
 
 export const joinTables = (elements, selectedTables) => {
-  if (selectedTables.length < 2) return { updatedElements: elements, newSelectedTables: selectedTables };
+  if (selectedTables.length < 2)
+    return { updatedElements: elements, newSelectedTables: selectedTables };
 
   const totalWidth = selectedTables.reduce((sum, t) => sum + t.width, 0);
-  const avgY = selectedTables.reduce((sum, t) => sum + t.y, 0) / selectedTables.length;
+  const avgY =
+    selectedTables.reduce((sum, t) => sum + t.y, 0) / selectedTables.length;
   const minX = Math.min(...selectedTables.map((t) => t.x));
-  const joinedFrom = selectedTables.flatMap((t) => (t.joinedFrom ? t.joinedFrom : [t.id]));
+  const joinedFrom = selectedTables.flatMap((t) =>
+    t.joinedFrom ? t.joinedFrom : [t.id]
+  );
 
   const newTable = {
     id: Date.now(),
@@ -65,7 +79,9 @@ export const joinTables = (elements, selectedTables) => {
 };
 
 export const applyNameEdit = (elements, editingId, editingName) => {
-  return elements.map((el) => (el.id === editingId ? { ...el, name: editingName } : el));
+  return elements.map((el) =>
+    el.id === editingId ? { ...el, name: editingName } : el
+  );
 };
 
 export const deleteElementById = (elements, id) => {

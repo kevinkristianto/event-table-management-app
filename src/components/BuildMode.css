@@ -1,160 +1,159 @@
 .build-mode {
-    padding: 20px;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .canvas {
-    position: relative;
-    flex-grow: 1;
-    border: 2px dashed #ccc;
-    margin-top: 20px;
-    background-color: #f9f9f9;
-    overflow: hidden;
-  }
-  
-  .element {
-    position: absolute;
-    border-radius: 4px;
-    cursor: grab;
-    user-select: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .element.table {
-    background-color: #4caf50;
-    width: 80px;
-    height: 80px;
-  }
-  
-  .element.chair {
-    background-color: #2196f3;
-    width: 40px;
-    height: 40px;
-  }
-  
-  .label {
-    color: black;
-    font-size: 10px;
-    text-align: center;
-    pointer-events: none;
-  }
-  
-  .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .modal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    min-width: 200px;
-  }
-  
-  .tabs button {
-    margin-right: 10px;
-    padding: 8px 16px;
-    cursor: pointer;
-  }
-  
-  .tabs .active {
-    font-weight: bold;
-    text-decoration: underline;
-  }
-  
-  .delete-btn {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: red;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 16px;
-    height: 16px;
-    font-size: 12px;
-    cursor: pointer;
-    z-index: 2;
-  }
-  
-  .element.selected {
-    outline: 3px dashed yellow;
-  }
-  
-  .element input {
-    width: 100%;
-    border: none;
-    background: rgba(255, 255, 255, 0.8);
-    font-size: 10px;
-    text-align: center;
-  }
-  
-  .canvas {
-    width: 100%;
-    height: calc(100vh - 120px);
-    border: 1px solid #ccc;
-    position: relative;
-    margin-top: 20px;
-    background-color: #fafafa;
-    overflow: hidden;
-  }
-  
-  .element {
-    position: absolute;
-    border: 1px solid #444;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #ddd;
-    font-size: 10px;
-    text-align: center;
-    cursor: move;
-    border-radius: 4px;
-  }
-  
-  .element.table {
-    background-color: #ffe0b2;
-  }
-  
-  .element.chair {
-    background-color: #cce5ff;
-  }
-  
-  .label {
-    pointer-events: none;
-    padding: 2px;
-    font-size: 10px;
-  }
-  
-  .delete-btn {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: red;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    font-size: 10px;
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    z-index: 2;
-  }
-  
-  .element input {
-    width: 90%;
-    font-size: 10px;
-    text-align: center;
-  }
-  
+  padding: 20px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.canvas {
+  position: relative;
+  flex-grow: 1;
+  border: 2px dashed #ccc;
+  margin-top: 20px;
+  background-color: #f9f9f9;
+  overflow: hidden;
+}
+
+.element {
+  position: absolute;
+  border-radius: 4px;
+  cursor: grab;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.element.table {
+  background-color: #4caf50;
+  width: 80px;
+  height: 80px;
+}
+
+.element.chair {
+  background-color: #2196f3;
+  width: 40px;
+  height: 40px;
+}
+
+.label {
+  color: black;
+  font-size: 10px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  min-width: 200px;
+}
+
+.tabs button {
+  margin-right: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.tabs .active {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.delete-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: red;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 12px;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.element.selected {
+  outline: 3px dashed yellow;
+}
+
+.element input {
+  width: 100%;
+  border: none;
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 10px;
+  text-align: center;
+}
+
+.canvas {
+  width: 100%;
+  height: calc(100vh - 120px);
+  border: 1px solid #ccc;
+  position: relative;
+  margin-top: 20px;
+  background-color: #fafafa;
+  overflow: hidden;
+}
+
+.element {
+  position: absolute;
+  border: 1px solid #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ddd;
+  font-size: 10px;
+  text-align: center;
+  cursor: move;
+  border-radius: 4px;
+}
+
+.element.table {
+  background-color: #ffe0b2;
+}
+
+.element.chair {
+  background-color: #cce5ff;
+}
+
+.label {
+  pointer-events: none;
+  padding: 2px;
+  font-size: 10px;
+}
+
+.delete-btn {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: red;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 10px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.element input {
+  width: 90%;
+  font-size: 10px;
+  text-align: center;
+}

@@ -1,29 +1,60 @@
-import React, { useState } from 'react';
+import React from 'react';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  useLocation,
+} from 'react-router-dom';
+
 import BuildMode from './components/BuildMode';
 import EditMode from './components/EditMode';
 import ViewMode from './components/ViewMode';
 import GuestForm from './components/GuestForm';
+import GuestList from './components/GuestList';
+import GuestLanding from './components/GuestLanding';
 
-const App = () => {
-  const [mode, setMode] = useState('build');
-  const layout = JSON.parse(localStorage.getItem("layout") || "[]");
+const AppWrapper = () => {
+  const location = useLocation();
+  const isGuestRoute = location.pathname.startsWith('/guest');
 
   return (
     <div style={{ padding: 20 }}>
-      <h1>Table Manager</h1>
-      <div>
-        <button onClick={() => setMode('build')}>Build</button>
-        <button onClick={() => setMode('edit')}>Edit</button>
-        <button onClick={() => setMode('view')}>View</button>
-      </div>
+      {!isGuestRoute && <h1>Table Manager</h1>}
 
-      <GuestForm />
+      {!isGuestRoute && (
+        <nav style={{ marginBottom: 20 }}>
+          <Link to="/admin/build">
+            <button>Build</button>
+          </Link>
+          <Link to="/admin/edit">
+            <button>Edit</button>
+          </Link>
+          <Link to="/admin/guests">
+            <button>Guest List</button>
+          </Link>
+          <Link to="/view">
+            <button>View</button>
+          </Link>
+        </nav>
+      )}
 
-      {mode === 'build' && <BuildMode />}
-      {mode === 'edit' && <EditMode elements={layout} />}
-      {mode === 'view' && <ViewMode />}
+      <Routes>
+        <Route path="/admin/build" element={<BuildMode />} />
+        <Route path="/admin/edit" element={<EditMode />} />
+        <Route path="/admin/guests" element={<GuestList />} />
+        <Route path="/view" element={<ViewMode />} />
+        <Route path="/guest/:guestToken" element={<GuestForm />} />
+        <Route path="/guest" element={<GuestLanding />} />
+      </Routes>
     </div>
   );
 };
+
+const App = () => (
+  <Router>
+    <AppWrapper />
+  </Router>
+);
 
 export default App;

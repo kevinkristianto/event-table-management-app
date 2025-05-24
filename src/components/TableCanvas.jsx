@@ -4,7 +4,10 @@ const TableCanvas = ({ tables }) => {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
       {tables.map((table) => (
-        <div key={table.id} style={{ border: '1px solid #000', padding: '10px' }}>
+        <div
+          key={table.id}
+          style={{ border: '1px solid #000', padding: '10px' }}
+        >
           <h4>Table {table.id}</h4>
           <div style={{ display: 'flex', gap: '5px' }}>
             {table.seats.map((seat) => (
