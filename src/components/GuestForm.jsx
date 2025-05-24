@@ -224,12 +224,11 @@ const GuestForm = () => {
 
         {message && (
           <p
-            style={{
-              marginTop: 10,
-              color: message.toLowerCase().includes('fail')
-                ? '#BC6C25'
-                : '#606C38',
-            }}
+            className={
+              message.toLowerCase().includes('fail')
+                ? 'guest-error'
+                : 'guest-success'
+            }
           >
             {message}
           </p>

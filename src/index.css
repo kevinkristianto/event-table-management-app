@@ -13,3 +13,11 @@ input,
 select {
   margin-right: 10px;
 }
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background-color: #fefae0;
+}

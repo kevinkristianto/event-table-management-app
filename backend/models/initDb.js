@@ -8,8 +8,6 @@ db.serialize(() => {
     data TEXT
   )`);
 
-  db.run(`DROP TABLE IF EXISTS guests`);
-
   db.run(`CREATE TABLE IF NOT EXISTS guests (
     id TEXT PRIMARY KEY,                
     guestToken TEXT UNIQUE NOT NULL,  

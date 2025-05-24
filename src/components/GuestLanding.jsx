@@ -36,30 +36,31 @@ const GuestLanding = () => {
   };
 
   return (
-    <div className="guest-container centered-content">
-      <form onSubmit={handleSubmit} className="guest-form">
-        <h2 className="guest-title">
-          Welcome to Kevin and Leticia's Wedding Reception
-        </h2>
+    <div>
+      <h2 className="guest-title">
+        Welcome to Kevin and Leticia's Wedding Reception
+      </h2>
+      <div className="guest-container centered-content">
+        <form onSubmit={handleSubmit} className="guest-form">
+          <label className="guest-label">
+            What is your name?
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter your full name"
+              required
+              className="guest-landing-input"
+            />
+          </label>
 
-        <label className="guest-label">
-          What is your name?
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your full name"
-            required
-            className="guest-landing-input"
-          />
-        </label>
+          {error && <p className="guest-error">{error}</p>}
 
-        {error && <p className="guest-error">{error}</p>}
-
-        <button type="submit" className="guest-submit-button">
-          Continue
-        </button>
-      </form>
+          <button type="submit" className="guest-submit-button">
+            Continue
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
