@@ -19,4 +19,15 @@ A simple table management tool with build, edit, and view modes. Data is saved l
 
 ```bash
 npm install
+```
+
+### Running the project locally
+For the front-end
+```bash
 npm start
+```
+
+For the back-end
+```bash
+node index.js
+```
