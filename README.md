@@ -1,6 +1,6 @@
 # Table Management App (React)
 
-A simple table management tool with build, edit, and view modes. Data is saved locally using `SQLite`.
+A simple table management tool with build, edit, and view modes. There is also the guest side of this app, which allow guest to submit menu selection and their allergy. Data is saved in the database using `SQLite`.
 
 ## Features
 
