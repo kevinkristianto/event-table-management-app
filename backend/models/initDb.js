@@ -9,8 +9,8 @@ db.serialize(() => {
   )`);
 
   db.run(`CREATE TABLE IF NOT EXISTS guests (
-    id TEXT PRIMARY KEY,                
-    guestToken TEXT UNIQUE NOT NULL,  
+    id TEXT PRIMARY KEY,
+    guestToken TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     menu TEXT,
     allergies TEXT,
@@ -19,10 +19,9 @@ db.serialize(() => {
 
   db.run(`CREATE TABLE IF NOT EXISTS seat_assignments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    guest_id TEXT,                     
-    layout_id INTEGER,
-    seat_id TEXT,
-    FOREIGN KEY (guest_id) REFERENCES guests(id),
+    layout_id INTEGER NOT NULL,
+    seat_id TEXT NOT NULL,
+    guest_name TEXT NOT NULL,
     FOREIGN KEY (layout_id) REFERENCES layouts(id)
   )`);
 });

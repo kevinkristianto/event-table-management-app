@@ -18,3 +18,10 @@ export const fetchLayoutByName = async (name) => {
 export const saveLayout = async (name, elements) => {
   return axios.post(`${API_BASE_URL}/layouts`, { name, elements });
 };
+
+export const assignSeatToGuest = async (layoutName, seatId, guestName) => {
+  return axios.post(`${API_BASE_URL}/layouts/${layoutName}/assign-seat`, {
+    seatId,
+    guestName,
+  });
+};

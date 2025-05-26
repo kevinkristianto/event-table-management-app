@@ -28,7 +28,40 @@
 }
 
 .element.chair {
-  background-color: #fff6cc;
+  border: 1px solid black;
+  background-color: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 5px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Seat Title (constant font size) */
+.seat-label {
+  font-size: 10px; /* Fixed font size for the seat title */
+  font-weight: bold;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Guest Name (dynamic font size) */
+.guest-name {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.guest-name-part {
+  text-align: center;
+  white-space: nowrap; /* Prevent wrapping */
+  overflow: hidden; /* Prevent text from spilling outside */
 }
 
 .label {
@@ -89,9 +122,41 @@
   align-items: center;
   z-index: 1000;
 }
+
 .modal-content {
   background: white;
   padding: 20px;
   border-radius: 5px;
   min-width: 300px;
+}
+
+.suggestions {
+  border: 1px solid #ccc;
+  background: white;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 150px;
+  overflow-y: auto;
+  position: absolute;
+  z-index: 999;
+  width: 200px;
+}
+
+.suggestions li {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.suggestions li:hover {
+  background-color: #eee;
+}
+
+.guest-label {
+  font-size: 10px;
+  color: #333;
+  text-align: center;
+  pointer-events: none;
+  word-break: break-word;
+  line-height: 1.2;
 }

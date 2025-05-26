@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import './EditMode.css';
 import axios from 'axios';
-import { fetchLayoutNames, fetchLayoutByName } from '../services/layoutService';
+import {
+  fetchLayoutNames,
+  fetchLayoutByName,
+  assignSeatToGuest,
+} from '../services/layoutService';
+import ResizableText from '../components/ResizableText';
 
 const EditMode = () => {
   const [layout, setLayout] = useState([]);
@@ -12,6 +17,7 @@ const EditMode = () => {
   const [showLayoutModal, setShowLayoutModal] = useState(false);
   const [availableLayouts, setAvailableLayouts] = useState([]);
   const [selectedLayoutName, setSelectedLayoutName] = useState('');
+  const [showGuestModal, setShowGuestModal] = useState(false);
 
   useEffect(() => {
     fetchGuests();
@@ -19,7 +25,7 @@ const EditMode = () => {
 
   const fetchGuests = async () => {
     try {
-      const res = await axios.get('http://localhost:3001/api/guests');
+      const res = await axios.get('http://localhost:5000/api/guests');
       const guestNames = res.data.map((g) => g.name);
       setAllGuests(guestNames);
     } catch (err) {
@@ -30,38 +36,52 @@ const EditMode = () => {
   const handleGuestInput = (e) => {
     const value = e.target.value;
     setGuestName(value);
-    if (value.trim() === '') {
+
+    if (value.trim().length < 3) {
       setGuestSuggestions([]);
       return;
     }
+
     const suggestions = allGuests.filter((g) =>
       g.toLowerCase().includes(value.toLowerCase())
     );
     setGuestSuggestions(suggestions);
   };
 
-  const handleAssignGuest = async (name) => {
+  const handleAssignGuest = async () => {
+    if (!guestName.trim()) return;
+
     try {
-      // Update local layout state
+      // Update layout locally
       setLayout((prevLayout) =>
         prevLayout.map((el) =>
-          el.id === selectedSeatId ? { ...el, guest: name } : el
+          el.id === selectedSeatId ? { ...el, guest: guestName.trim() } : el
         )
       );
 
-      // Save guest to backend (expand payload as needed)
-      await axios.post('http://localhost:3001/api/guests', {
-        name,
-        menu: '',
-        allergies: [],
-      });
+      // Assign seat to guest on backend
+      await assignSeatToGuest(
+        selectedLayoutName,
+        String(selectedSeatId),
+        guestName.trim()
+      );
 
+      console.log('Guest assigned and saved successfully.');
+    } catch (err) {
+      console.error('Failed to assign guest', err);
+    } finally {
       setGuestName('');
       setGuestSuggestions([]);
       setSelectedSeatId(null);
-    } catch (err) {
-      console.error('Failed to save guest', err);
+      setShowGuestModal(false);
     }
+  };
+
+  const handleChairClick = (id) => {
+    setSelectedSeatId(id);
+    setShowGuestModal(true);
+    setGuestName('');
+    setGuestSuggestions([]);
   };
 
   const handleLoadLayoutClick = async () => {
@@ -76,9 +96,16 @@ const EditMode = () => {
 
   const handleLoadLayout = async () => {
     if (!selectedLayoutName) return;
+
     try {
       const loadedLayout = await fetchLayoutByName(selectedLayoutName);
-      setLayout(loadedLayout);
+      if (Array.isArray(loadedLayout)) {
+        setLayout(loadedLayout);
+      } else {
+        console.warn('Loaded layout is not an array:', loadedLayout);
+        setLayout([]);
+      }
+
       setShowLayoutModal(false);
     } catch (err) {
       console.error('Failed to load layout', err);
@@ -91,46 +118,95 @@ const EditMode = () => {
       <button onClick={handleLoadLayoutClick}>Load Layout</button>
 
       <div className="canvas">
-        {layout.map((el) => (
-          <div
-            key={el.id}
-            className={`element ${el.type}`}
-            style={{
-              left: el.x,
-              top: el.y,
-              width: el.width,
-              height: el.height,
-            }}
-            onClick={() => el.type === 'chair' && setSelectedSeatId(el.id)}
-          >
-            <span className="label">
-              {el.name}
-              {el.guest && <div className="guest-label">{el.guest}</div>}
-            </span>
+        {Array.isArray(layout) &&
+          layout.map((el) => (
+            <div
+              key={el.id}
+              className={`element ${el.type}`}
+              style={{
+                left: el.x,
+                top: el.y,
+                width: el.width,
+                height: el.height,
+                position: 'absolute',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                textAlign: 'center',
+                overflow: 'hidden',
+                padding: '5px',
+                boxSizing: 'border-box',
+              }}
+              onClick={() => el.type === 'chair' && handleChairClick(el.id)}
+            >
+              {/* Seat Title */}
+              <span className="seat-label">{el.name}</span>
 
-            {selectedSeatId === el.id && (
-              <div className="guest-input">
-                <input
-                  type="text"
-                  value={guestName}
-                  onChange={handleGuestInput}
-                  placeholder="Assign guest"
-                />
-                {guestSuggestions.length > 0 && (
-                  <ul className="suggestions">
-                    {guestSuggestions.map((g, idx) => (
-                      <li key={idx} onClick={() => handleAssignGuest(g)}>
-                        {g}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+              {/* Guest Name */}
+              {el.guest && (
+                <div className="guest-name">
+                  {el.guest.split(' ').map((part, index) => (
+                    <ResizableText
+                      key={index}
+                      text={part}
+                      className="guest-name-part"
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
       </div>
 
+      {/* Guest Modal */}
+      {showGuestModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>Assign Guest to Seat</h3>
+            <input
+              type="text"
+              value={guestName}
+              onChange={handleGuestInput}
+              placeholder="Type guest name"
+            />
+            {guestSuggestions.length > 0 && (
+              <ul className="suggestions">
+                {guestSuggestions.map((name, idx) => (
+                  <li
+                    key={idx}
+                    onClick={() => {
+                      setGuestName(name);
+                      setGuestSuggestions([]);
+                    }}
+                  >
+                    {name}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div style={{ marginTop: '10px' }}>
+              <button onClick={handleAssignGuest} disabled={!guestName.trim()}>
+                Save
+              </button>
+              <button
+                onClick={() => {
+                  setShowGuestModal(false);
+                  setSelectedSeatId(null);
+                  setGuestName('');
+                  setGuestSuggestions([]);
+                  console.log('Modal closed by cancel.');
+                }}
+                style={{ marginLeft: '10px' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Layout Modal */}
       {showLayoutModal && (
         <div className="modal">
           <div className="modal-content">

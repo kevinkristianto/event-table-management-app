@@ -24,22 +24,43 @@ app.get('/api/layouts', (req, res) => {
 
 app.get('/api/layouts/:name', (req, res) => {
   const name = req.params.name;
-  const query = `SELECT data FROM layouts WHERE name = ?`;
-  db.get(query, [name], (err, row) => {
-    if (err) {
-      console.error('DB error fetching layout:', err);
-      return res.status(500).json({ error: 'Failed to fetch layout' });
-    }
-    if (!row) {
+  const layoutQuery = `SELECT id, data FROM layouts WHERE name = ?`;
+
+  db.get(layoutQuery, [name], (err, row) => {
+    if (err || !row) {
+      console.error('Error fetching layout:', err);
       return res.status(404).json({ error: 'Layout not found' });
     }
+
+    let elements;
     try {
-      const data = JSON.parse(row.data);
-      res.json({ name, elements: data });
+      elements = JSON.parse(row.data);
     } catch (parseErr) {
-      console.error('Error parsing layout JSON:', parseErr);
-      res.status(500).json({ error: 'Corrupted layout data' });
+      console.error('Error parsing layout data:', parseErr);
+      return res.status(500).json({ error: 'Invalid layout data' });
     }
+
+    const layoutId = row.id;
+
+    const assignmentQuery = `SELECT seat_id, guest_name FROM seat_assignments WHERE layout_id = ?`;
+    db.all(assignmentQuery, [layoutId], (assignErr, assignments) => {
+      if (assignErr) {
+        console.error('Error fetching assignments:', assignErr);
+        return res.status(500).json({ error: 'Failed to fetch assignments' });
+      }
+
+      const guestMap = Object.fromEntries(
+        assignments.map((a) => [a.seat_id, a.guest_name])
+      );
+
+      // Merge guest names into elements
+      const mergedElements = elements.map((el) => ({
+        ...el,
+        guest: guestMap[el.id] || el.guest || null,
+      }));
+
+      res.json({ name, elements: mergedElements });
+    });
   });
 });
 
@@ -81,7 +102,6 @@ app.post('/api/layouts', (req, res) => {
   });
 });
 
-// --- Guest routes ---
 app.post('/api/guests', (req, res) => {
   const { name, menu = '', allergies = [], steakCook = '' } = req.body;
 
@@ -280,6 +300,45 @@ app.put('/api/guests/:guestToken', (req, res) => {
       );
     }
   );
+});
+
+app.post('/api/layouts/:layoutName/assign-seat', async (req, res) => {
+  const { layoutName } = req.params;
+  const { seatId, guestName } = req.body;
+
+  try {
+    db.get(
+      'SELECT id FROM layouts WHERE name = ?',
+      [layoutName],
+      (err, layout) => {
+        if (err || !layout) {
+          return res.status(404).send({ error: 'Layout not found' });
+        }
+
+        const layoutId = layout.id;
+
+        db.run(
+          `
+          INSERT INTO seat_assignments (layout_id, seat_id, guest_name)
+          VALUES (?, ?, ?)
+          ON CONFLICT(seat_id, layout_id)
+          DO UPDATE SET guest_name = excluded.guest_name
+          `,
+          [layoutId, seatId, guestName],
+          (err) => {
+            if (err) {
+              console.error(err);
+              return res.status(500).send({ error: 'Failed to assign seat' });
+            }
+            res.send({ success: true });
+          }
+        );
+      }
+    );
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ error: 'Server error' });
+  }
 });
 
 app.listen(PORT, () => {
