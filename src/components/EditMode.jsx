@@ -42,9 +42,14 @@ const EditMode = () => {
       return;
     }
 
-    const suggestions = allGuests.filter((g) =>
-      g.toLowerCase().includes(value.toLowerCase())
-    );
+    const assignedGuests = layout
+      .filter((el) => el.guest)
+      .map((el) => el.guest.toLowerCase());
+
+    const suggestions = allGuests
+      .filter((g) => !assignedGuests.includes(g.toLowerCase()))
+      .filter((g) => g.toLowerCase().includes(value.toLowerCase()));
+
     setGuestSuggestions(suggestions);
   };
 
@@ -52,7 +57,6 @@ const EditMode = () => {
     if (!guestName.trim()) return;
 
     try {
-      // Update layout locally
       setLayout((prevLayout) =>
         prevLayout.map((el) =>
           el.id === selectedSeatId ? { ...el, guest: guestName.trim() } : el
