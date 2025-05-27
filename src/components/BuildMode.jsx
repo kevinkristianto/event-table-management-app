@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import './BuildMode.css';
+import CanvasWrapper from './CanvasWrapper';
 import {
   fetchLayoutNames,
   fetchLayoutByName,
@@ -23,7 +24,8 @@ const BuildMode = () => {
   const [editingName, setEditingName] = useState('');
   const [layoutName, setLayoutName] = useState('');
   const [savedLayouts, setSavedLayouts] = useState([]);
-  const canvasRef = useRef(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [contentPosition, setContentPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const loadLayoutNames = async () => {
@@ -38,21 +40,45 @@ const BuildMode = () => {
     loadLayoutNames();
   }, []);
 
+  const handleTransformChange = ({ zoomLevel, contentPosition }) => {
+    setZoomLevel(zoomLevel);
+    setContentPosition(contentPosition);
+  };
+
   const addElement = () => {
-    const canvasRect = canvasRef.current.getBoundingClientRect();
-    const newElement = createNewElement(selectedType, canvasRect);
-    setElements([...elements, newElement]);
-    setShowModal(false);
+    try {
+      const canvasRect = document
+        .querySelector('.canvas-wrapper')
+        .getBoundingClientRect();
+      const newElement = createNewElement(
+        selectedType,
+        canvasRect,
+        zoomLevel,
+        contentPosition
+      );
+      if (!newElement || !newElement.id) {
+        throw new Error('Invalid element created. Please check the service.');
+      }
+      setElements([...elements, newElement]);
+      setShowModal(false);
+    } catch (error) {
+      console.error('Error adding element:', error);
+      alert('Failed to add element. Please try again.');
+    }
   };
 
   const handleDrag = (id, e) => {
-    const canvasRect = canvasRef.current.getBoundingClientRect();
+    const canvasRect = document
+      .querySelector('.canvas-wrapper')
+      .getBoundingClientRect();
     const updated = updateElementPosition(
       elements,
       id,
       e.clientX,
       e.clientY,
-      canvasRect
+      canvasRect,
+      zoomLevel,
+      contentPosition
     );
     setElements(updated);
   };
@@ -123,7 +149,10 @@ const BuildMode = () => {
   };
 
   return (
-    <div className="build-mode">
+    <div
+      className="build-mode"
+      onWheel={(e) => e.preventDefault()} 
+    >
       <h2>Build Mode</h2>
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
         <button onClick={() => setShowModal(true)}>Add Properties</button>
@@ -156,48 +185,55 @@ const BuildMode = () => {
         </select>
       </div>
 
-      <div className="canvas" ref={canvasRef}>
-        {elements.map((el) => (
-          <div
-            key={el.id}
-            className={`element ${el.type} ${
-              selectedTables.find((t) => t.id === el.id) ? 'selected' : ''
-            }`}
-            style={{
-              left: el.x,
-              top: el.y,
-              width: el.width,
-              height: el.height,
-              position: 'absolute',
-              cursor: 'pointer',
-            }}
-            onMouseDown={() => handleMouseDown(el.id)}
-            onClick={() => toggleSelect(el)}
-            onDoubleClick={() => handleDoubleClick(el)}
-          >
-            {editingId === el.id ? (
-              <input
-                value={editingName}
-                onChange={(e) => setEditingName(e.target.value)}
-                onBlur={applyEdit}
-                onKeyDown={(e) => e.key === 'Enter' && applyEdit()}
-                autoFocus
-              />
-            ) : (
-              <span className="label">{el.name}</span>
-            )}
-            <button
-              className="delete-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                deleteElement(el.id);
+      <CanvasWrapper onTransformChange={handleTransformChange}>
+        {elements.map((el) => {
+          if (!el || !el.id || !el.x || !el.y || !el.width || !el.height) {
+            console.error('Invalid element:', el);
+            return null;
+          }
+
+          return (
+            <div
+              key={el.id}
+              className={`element ${el.type} ${
+                selectedTables.find((t) => t.id === el.id) ? 'selected' : ''
+              }`}
+              style={{
+                left: el.x,
+                top: el.y,
+                width: el.width,
+                height: el.height,
+                position: 'absolute',
+                cursor: 'pointer',
               }}
+              onMouseDown={() => handleMouseDown(el.id)}
+              onClick={() => toggleSelect(el)}
+              onDoubleClick={() => handleDoubleClick(el)}
             >
-              ×
-            </button>
-          </div>
-        ))}
-      </div>
+              {editingId === el.id ? (
+                <input
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  onBlur={applyEdit}
+                  onKeyDown={(e) => e.key === 'Enter' && applyEdit()}
+                  autoFocus
+                />
+              ) : (
+                <span className="label">{el.name}</span>
+              )}
+              <button
+                className="delete-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteElement(el.id);
+                }}
+              >
+                ×
+              </button>
+            </div>
+          );
+        })}
+      </CanvasWrapper>
 
       {showModal && (
         <div className="modal">

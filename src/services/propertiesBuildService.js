@@ -1,17 +1,25 @@
 const TABLE_SIZE = 60;
 const CHAIR_SIZE = 30;
 
-export const createNewElement = (type, canvasRect) => {
+export const createNewElement = (
+  type,
+  canvasRect,
+  zoomLevel,
+  contentPosition
+) => {
+  const centerX =
+    (canvasRect.width / 2 - contentPosition.x) / zoomLevel -
+    (type === 'table' ? TABLE_SIZE / 2 : CHAIR_SIZE / 2);
+  const centerY =
+    (canvasRect.height / 2 - contentPosition.y) / zoomLevel -
+    (type === 'table' ? TABLE_SIZE / 2 : CHAIR_SIZE / 2);
+
   return {
     id: Date.now(),
     type,
     name: '',
-    x:
-      canvasRect.width / 2 -
-      (type === 'table' ? TABLE_SIZE / 2 : CHAIR_SIZE / 2),
-    y:
-      canvasRect.height / 2 -
-      (type === 'table' ? TABLE_SIZE / 2 : CHAIR_SIZE / 2),
+    x: centerX,
+    y: centerY,
     width: type === 'table' ? TABLE_SIZE : CHAIR_SIZE,
     height: type === 'table' ? TABLE_SIZE : CHAIR_SIZE,
   };
@@ -22,14 +30,20 @@ export const updateElementPosition = (
   id,
   clientX,
   clientY,
-  canvasRect
+  canvasRect,
+  zoomLevel,
+  contentPosition
 ) => {
   return elements.map((el) =>
     el.id === id
       ? {
           ...el,
-          x: clientX - canvasRect.left - el.width / 2,
-          y: clientY - canvasRect.top - el.height / 2,
+          x:
+            (clientX - canvasRect.left - contentPosition.x) / zoomLevel -
+            el.width / 2,
+          y:
+            (clientY - canvasRect.top - contentPosition.y) / zoomLevel -
+            el.height / 2,
         }
       : el
   );

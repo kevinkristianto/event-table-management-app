@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './EditMode.css';
 import axios from 'axios';
+import CanvasWrapper from './CanvasWrapper';
 import {
   fetchLayoutNames,
   fetchLayoutByName,
@@ -18,6 +19,8 @@ const EditMode = () => {
   const [availableLayouts, setAvailableLayouts] = useState([]);
   const [selectedLayoutName, setSelectedLayoutName] = useState('');
   const [showGuestModal, setShowGuestModal] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1); 
+  const [contentPosition, setContentPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     fetchGuests();
@@ -63,7 +66,6 @@ const EditMode = () => {
         )
       );
 
-      // Assign seat to guest on backend
       await assignSeatToGuest(
         selectedLayoutName,
         String(selectedSeatId),
@@ -116,22 +118,32 @@ const EditMode = () => {
     }
   };
 
+  const handleTransformChange = ({ zoomLevel, contentPosition }) => {
+    setZoomLevel(zoomLevel);
+    setContentPosition(contentPosition);
+  };
+
   return (
     <div className="edit-mode">
       <h2>Edit Mode</h2>
-      <button onClick={handleLoadLayoutClick}>Load Layout</button>
+      <button className="load-layout-button" onClick={handleLoadLayoutClick}>
+        Load Layout
+      </button>
 
-      <div className="canvas">
+      <CanvasWrapper
+        onTransformChange={handleTransformChange}
+        className="canvas-wrapper"
+      >
         {Array.isArray(layout) &&
           layout.map((el) => (
             <div
               key={el.id}
               className={`element ${el.type}`}
               style={{
-                left: el.x,
-                top: el.y,
-                width: el.width,
-                height: el.height,
+                left: `${el.x * zoomLevel + contentPosition.x}px`,
+                top: `${el.y * zoomLevel + contentPosition.y}px`,
+                width: `${el.width * zoomLevel}px`,
+                height: `${el.height * zoomLevel}px`,
                 position: 'absolute',
                 display: 'flex',
                 flexDirection: 'column',
@@ -161,7 +173,7 @@ const EditMode = () => {
               )}
             </div>
           ))}
-      </div>
+      </CanvasWrapper>
 
       {/* Guest Modal */}
       {showGuestModal && (

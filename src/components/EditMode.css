@@ -1,5 +1,6 @@
 .edit-mode {
   padding: 20px;
+  height: 100vh;
 }
 
 .canvas {
@@ -40,16 +41,14 @@
   overflow: hidden;
 }
 
-/* Seat Title (constant font size) */
 .seat-label {
-  font-size: 10px; /* Fixed font size for the seat title */
+  font-size: 10px; 
   font-weight: bold;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
 }
 
-/* Guest Name (dynamic font size) */
 .guest-name {
   display: flex;
   flex-direction: column;
@@ -60,8 +59,8 @@
 
 .guest-name-part {
   text-align: center;
-  white-space: nowrap; /* Prevent wrapping */
-  overflow: hidden; /* Prevent text from spilling outside */
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .label {
@@ -159,4 +158,14 @@
   pointer-events: none;
   word-break: break-word;
   line-height: 1.2;
+}
+
+.load-layout-button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #46481f;
+  color: rgb(215, 231, 215);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }

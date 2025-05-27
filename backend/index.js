@@ -302,43 +302,37 @@ app.put('/api/guests/:guestToken', (req, res) => {
   );
 });
 
-app.post('/api/layouts/:layoutName/assign-seat', async (req, res) => {
+app.post('/api/layouts/:layoutName/assign-seat', (req, res) => {
   const { layoutName } = req.params;
   const { seatId, guestName } = req.body;
 
-  try {
-    db.get(
-      'SELECT id FROM layouts WHERE name = ?',
-      [layoutName],
-      (err, layout) => {
-        if (err || !layout) {
-          return res.status(404).send({ error: 'Layout not found' });
-        }
+  console.log('Assigning guest:', { layoutName, seatId, guestName }); // Log the request data
 
-        const layoutId = layout.id;
+  const layoutQuery = `SELECT id FROM layouts WHERE name = ?`;
+  db.get(layoutQuery, [layoutName], (err, row) => {
+    if (err || !row) {
+      console.error('Error fetching layout:', err);
+      return res.status(404).json({ error: 'Layout not found' });
+    }
 
-        db.run(
-          `
-          INSERT INTO seat_assignments (layout_id, seat_id, guest_name)
-          VALUES (?, ?, ?)
-          ON CONFLICT(seat_id, layout_id)
-          DO UPDATE SET guest_name = excluded.guest_name
-          `,
-          [layoutId, seatId, guestName],
-          (err) => {
-            if (err) {
-              console.error(err);
-              return res.status(500).send({ error: 'Failed to assign seat' });
-            }
-            res.send({ success: true });
-          }
-        );
+    const layoutId = row.id;
+
+    const upsertQuery = `
+      INSERT INTO seat_assignments (layout_id, seat_id, guest_name)
+      VALUES (?, ?, ?)
+      ON CONFLICT(layout_id, seat_id) DO UPDATE SET guest_name = excluded.guest_name
+    `;
+    db.run(upsertQuery, [layoutId, seatId, guestName], (upsertErr) => {
+      if (upsertErr) {
+        console.error('Error saving seat assignment:', upsertErr); // Log the error
+        return res
+          .status(500)
+          .json({ error: 'Failed to save seat assignment' });
       }
-    );
-  } catch (err) {
-    console.error(err);
-    res.status(500).send({ error: 'Server error' });
-  }
+
+      res.json({ success: true });
+    });
+  });
 });
 
 app.listen(PORT, () => {
