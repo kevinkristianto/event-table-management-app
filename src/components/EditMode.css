@@ -3,7 +3,7 @@
   height: 100vh;
 }
 
-.canvas {
+.canvas-wrapper {
   width: 100%;
   height: calc(100vh - 120px);
   position: relative;
@@ -16,12 +16,13 @@
 .element {
   position: absolute;
   display: flex;
+  flex-direction: column; /* Stack content vertically */
   justify-content: center;
   align-items: center;
-  border: 1px solid #333;
-  background-color: white;
-  cursor: pointer;
-  border-radius: 4px;
+  overflow: hidden; /* Prevent overflow */
+  text-align: center;
+  width: 100%; /* Ensure it takes the full width */
+  height: 100%; /* Ensure it takes the full height */
 }
 
 .element.table {
@@ -41,26 +42,38 @@
   overflow: hidden;
 }
 
-.seat-label {
-  font-size: 10px; 
+.element .seat-label {
+  font-size: 10px;
   font-weight: bold;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
 }
 
-.guest-name {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.guest-name-part {
+.element.assigned .seat-label {
+  font-size: 6px;
+  font-weight: bold;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
+  margin-bottom: 0.5px;
+}
+
+.element.assigned .guest-name {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.element.assigned .guest-name-part {
+  display: block;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  white-space: normal;
+  text-align: center;
 }
 
 .label {

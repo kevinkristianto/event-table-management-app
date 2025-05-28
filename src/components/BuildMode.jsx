@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './BuildMode.css';
 import CanvasWrapper from './CanvasWrapper';
 import {
@@ -8,7 +8,6 @@ import {
 } from '../services/layoutService';
 import {
   createNewElement,
-  updateElementPosition,
   toggleTableSelection,
   joinTables as joinTablesService,
   applyNameEdit,
@@ -26,6 +25,8 @@ const BuildMode = () => {
   const [savedLayouts, setSavedLayouts] = useState([]);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [contentPosition, setContentPosition] = useState({ x: 0, y: 0 });
+  const [isDraggingObject, setIsDraggingObject] = useState(false);
+  const canvasRef = useRef(null);
 
   useEffect(() => {
     const loadLayoutNames = async () => {
@@ -67,28 +68,72 @@ const BuildMode = () => {
     }
   };
 
-  const handleDrag = (id, e) => {
-    const canvasRect = document
-      .querySelector('.canvas-wrapper')
-      .getBoundingClientRect();
-    const updated = updateElementPosition(
-      elements,
-      id,
-      e.clientX,
-      e.clientY,
-      canvasRect,
-      zoomLevel,
-      contentPosition
+  const handleDrag = (id, e, offsetX, offsetY) => {
+    const canvasRect = canvasRef.current.getBoundingClientRect();
+
+    // Calculate the new position based on the mouse cursor and the offset
+    const newX =
+      (e.clientX - canvasRect.left - offsetX) / zoomLevel - contentPosition.x;
+    const newY =
+      (e.clientY - canvasRect.top - offsetY) / zoomLevel - contentPosition.y;
+
+    const updated = elements.map((el) =>
+      el.id === id ? { ...el, x: newX, y: newY } : el
     );
     setElements(updated);
   };
 
-  const handleMouseDown = (id) => {
-    const onMouseMove = (e) => handleDrag(id, e);
+  const handleMouseDown = (id, e) => {
+    e.stopPropagation(); // Prevent canvas panning
+    setIsDraggingObject(true);
+
+    const canvasRect = canvasRef.current.getBoundingClientRect();
+    const element = elements.find((el) => el.id === id);
+
+    // Calculate the offset between the mouse cursor and the object's position
+    const offsetX =
+      e.clientX -
+      canvasRect.left -
+      element.x * zoomLevel -
+      contentPosition.x * zoomLevel;
+    const offsetY =
+      e.clientY -
+      canvasRect.top -
+      element.y * zoomLevel -
+      contentPosition.y * zoomLevel;
+
+    const onMouseMove = (e) => handleDrag(id, e, offsetX, offsetY);
+    const onMouseUp = () => {
+      setIsDraggingObject(false);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
+  const handleCanvasMouseDown = (e) => {
+    if (isDraggingObject) return; // Prevent canvas panning while dragging an object
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+
+    const onMouseMove = (e) => {
+      const deltaX = e.clientX - startX;
+      const deltaY = e.clientY - startY;
+
+      setContentPosition((prev) => ({
+        x: prev.x + deltaX / zoomLevel,
+        y: prev.y + deltaY / zoomLevel,
+      }));
+    };
+
     const onMouseUp = () => {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
+
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
   };
@@ -151,7 +196,9 @@ const BuildMode = () => {
   return (
     <div
       className="build-mode"
-      onWheel={(e) => e.preventDefault()} 
+      onWheel={(e) => e.preventDefault()}
+      onMouseDown={handleCanvasMouseDown}
+      ref={canvasRef}
     >
       <h2>Build Mode</h2>
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -206,7 +253,7 @@ const BuildMode = () => {
                 position: 'absolute',
                 cursor: 'pointer',
               }}
-              onMouseDown={() => handleMouseDown(el.id)}
+              onMouseDown={(e) => handleMouseDown(el.id, e)}
               onClick={() => toggleSelect(el)}
               onDoubleClick={() => handleDoubleClick(el)}
             >

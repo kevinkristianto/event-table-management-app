@@ -7,7 +7,6 @@ import {
   fetchLayoutByName,
   assignSeatToGuest,
 } from '../services/layoutService';
-import ResizableText from '../components/ResizableText';
 
 const EditMode = () => {
   const [layout, setLayout] = useState([]);
@@ -19,7 +18,7 @@ const EditMode = () => {
   const [availableLayouts, setAvailableLayouts] = useState([]);
   const [selectedLayoutName, setSelectedLayoutName] = useState('');
   const [showGuestModal, setShowGuestModal] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(1); 
+  const [zoomLevel, setZoomLevel] = useState(1);
   const [contentPosition, setContentPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -83,6 +82,30 @@ const EditMode = () => {
     }
   };
 
+  const handleRemoveGuest = async () => {
+    try {
+      setLayout((prevLayout) =>
+        prevLayout.map((el) =>
+          el.id === selectedSeatId ? { ...el, guest: null } : el
+        )
+      );
+
+      await axios.post(
+        `http://localhost:5000/api/layouts/${selectedLayoutName}/assign-seat`,
+        { seatId: selectedSeatId, guestName: null }
+      );
+
+      console.log('Guest removed successfully.');
+    } catch (err) {
+      console.error('Failed to remove guest', err);
+    } finally {
+      setGuestName('');
+      setGuestSuggestions([]);
+      setSelectedSeatId(null);
+      setShowGuestModal(false);
+    }
+  };
+
   const handleChairClick = (id) => {
     setSelectedSeatId(id);
     setShowGuestModal(true);
@@ -131,14 +154,14 @@ const EditMode = () => {
       </button>
 
       <CanvasWrapper
-        onTransformChange={handleTransformChange}
         className="canvas-wrapper"
+        onTransformChange={handleTransformChange}
       >
         {Array.isArray(layout) &&
           layout.map((el) => (
             <div
               key={el.id}
-              className={`element ${el.type}`}
+              className={`element ${el.type} ${el.guest ? 'assigned' : ''}`}
               style={{
                 left: `${el.x * zoomLevel + contentPosition.x}px`,
                 top: `${el.y * zoomLevel + contentPosition.y}px`,
@@ -156,18 +179,21 @@ const EditMode = () => {
               }}
               onClick={() => el.type === 'chair' && handleChairClick(el.id)}
             >
-              {/* Seat Title */}
+              {/* Seat Label */}
               <span className="seat-label">{el.name}</span>
 
               {/* Guest Name */}
               {el.guest && (
-                <div className="guest-name">
+                <div
+                  className="guest-name"
+                  style={{
+                    fontSize: `${4 * zoomLevel}px`, // Dynamically scale font size with zoom level
+                  }}
+                >
                   {el.guest.split(' ').map((part, index) => (
-                    <ResizableText
-                      key={index}
-                      text={part}
-                      className="guest-name-part"
-                    />
+                    <span key={index} className="guest-name-part">
+                      {part}
+                    </span>
                   ))}
                 </div>
               )}
@@ -179,7 +205,11 @@ const EditMode = () => {
       {showGuestModal && (
         <div className="modal">
           <div className="modal-content">
-            <h3>Assign Guest to Seat</h3>
+            <h3>
+              {layout.find((el) => el.id === selectedSeatId)?.guest
+                ? 'Edit Guest Assignment'
+                : 'Assign Guest to Seat'}
+            </h3>
             <input
               type="text"
               value={guestName}
@@ -205,6 +235,18 @@ const EditMode = () => {
               <button onClick={handleAssignGuest} disabled={!guestName.trim()}>
                 Save
               </button>
+              {layout.find((el) => el.id === selectedSeatId)?.guest && (
+                <button
+                  onClick={handleRemoveGuest}
+                  style={{
+                    marginLeft: '10px',
+                    backgroundColor: 'red',
+                    color: 'white',
+                  }}
+                >
+                  Remove Guest
+                </button>
+              )}
               <button
                 onClick={() => {
                   setShowGuestModal(false);

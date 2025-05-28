@@ -322,7 +322,7 @@ app.post('/api/layouts/:layoutName/assign-seat', (req, res) => {
       VALUES (?, ?, ?)
       ON CONFLICT(layout_id, seat_id) DO UPDATE SET guest_name = excluded.guest_name
     `;
-    db.run(upsertQuery, [layoutId, seatId, guestName], (upsertErr) => {
+    db.run(upsertQuery, [layoutId, seatId, guestName || null], (upsertErr) => {
       if (upsertErr) {
         console.error('Error saving seat assignment:', upsertErr); // Log the error
         return res

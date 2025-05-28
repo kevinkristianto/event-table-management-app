@@ -1,15 +1,4 @@
-.guest-landing-form {
-  background-color: #606c38;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-  width: 100%;
-  max-width: 400px;
-  margin: 0 auto;
-  color: #fefae0;
-}
-
-.guest-label {
+.guest-landing-label {
   display: flex;
   flex-direction: column;
   font-size: 18px;
@@ -159,4 +148,56 @@
   color: #bc6c25;
   margin-top: 10px;
   font-weight: bold;
+}
+
+.guest-menu-confirmation {
+  background-color: #606c38; /* Same background color as GuestForm */
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Same shadow effect */
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  color: #fefae0; /* Text color consistent with GuestForm */
+}
+
+.guest-menu-title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: bold;
+  color: #283618; /* Title color consistent with GuestForm */
+  margin-bottom: 20px;
+}
+
+.selection-details {
+  margin-top: 20px;
+  font-size: 16px;
+  color: #fefae0; /* Text color consistent with GuestForm */
+}
+
+.selection-details ul {
+  list-style: none;
+  padding: 0;
+}
+
+.selection-details li {
+  margin-bottom: 10px;
+}
+
+.edit-button {
+  margin-top: 20px;
+  background-color: #dda15e; /* Button color consistent with GuestForm */
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #283618; /* Button text color consistent with GuestForm */
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+.edit-button:hover {
+  background-color: #bc6c25; /* Hover effect consistent with GuestForm */
 }

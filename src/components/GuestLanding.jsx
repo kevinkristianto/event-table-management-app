@@ -29,7 +29,7 @@ const GuestLanding = () => {
         return;
       }
 
-      navigate(`/guest/${encodeURIComponent(guest.guestToken)}`);
+      navigate(`/guest/menu-selection/${encodeURIComponent(guest.guestToken)}`);
     } catch (err) {
       setError('Failed to check guest. Please try again.');
     }
@@ -42,7 +42,7 @@ const GuestLanding = () => {
       </h2>
       <div className="guest-container centered-content">
         <form onSubmit={handleSubmit} className="guest-form">
-          <label className="guest-label">
+          <label className="guest-landing-label">
             What is your name?
             <input
               type="text"

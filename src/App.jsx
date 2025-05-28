@@ -13,6 +13,7 @@ import ViewMode from './components/ViewMode';
 import GuestForm from './components/GuestForm';
 import GuestList from './components/GuestList';
 import GuestLanding from './components/GuestLanding';
+import GuestMenuConfirmation from './components/GuestMenuConfirmation'; // Import the new component
 
 const AppWrapper = () => {
   const location = useLocation();
@@ -44,8 +45,16 @@ const AppWrapper = () => {
         <Route path="/admin/edit" element={<EditMode />} />
         <Route path="/admin/guests" element={<GuestList />} />
         <Route path="/view" element={<ViewMode />} />
-        <Route path="/guest/:guestToken" element={<GuestForm />} />
+        <Route
+          path="/guest/menu-selection/:guestToken"
+          element={<GuestForm />}
+        />
         <Route path="/guest" element={<GuestLanding />} />
+        <Route
+          path="/guest/menu-confirmation/:guestToken"
+          element={<GuestMenuConfirmation />}
+        />{' '}
+        {/* Add route for GuestMenuConfirmation */}
       </Routes>
     </div>
   );

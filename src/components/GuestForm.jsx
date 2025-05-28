@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import './GuestStyles.css';
 
 const allergiesList = [
@@ -14,6 +14,7 @@ const allergiesList = [
 
 const GuestForm = () => {
   const { guestToken } = useParams();
+  const navigate = useNavigate();
   const [guest, setGuest] = useState(null);
   const [menuType, setMenuType] = useState('');
   const [menuSelection, setMenuSelection] = useState('');
@@ -101,7 +102,18 @@ const GuestForm = () => {
         updateData
       );
 
-      setMessage('Your selections have been saved. Thank you!');
+      navigate(`/guest/menu-confirmation/${guestToken}`, {
+        state: {
+          selection: {
+            'Menu Selected': menuSelection || menuType,
+            ...(menuSelection === 'Grilled Ribeye' && {
+              'Steak Cooking Level': steakCook,
+            }),
+            Allergies: allergies.length > 0 ? allergies.join(', ') : 'None',
+          },
+          guestToken,
+        },
+      });
     } catch {
       setMessage('Failed to save your selections, please try again.');
     }

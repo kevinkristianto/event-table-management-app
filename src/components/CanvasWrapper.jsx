@@ -2,10 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import './CanvasWrapper.css';
 
 const CanvasWrapper = ({ children, onTransformChange }) => {
-  const [zoomLevel, setZoomLevel] = useState(1); 
+  const [zoomLevel, setZoomLevel] = useState(1);
   const [contentPosition, setContentPosition] = useState({ x: 0, y: 0 });
-  const [isPanning, setIsPanning] = useState(false); 
-  const [startPan, setStartPan] = useState({ x: 0, y: 0 }); 
+  const [isPanning, setIsPanning] = useState(false);
+  const [startPan, setStartPan] = useState({ x: 0, y: 0 });
   const contentRef = useRef(null);
 
   useEffect(() => {
