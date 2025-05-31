@@ -5,6 +5,7 @@ import {
   fetchLayoutNames,
   fetchLayoutByName,
   saveLayout,
+  deleteLayout,
 } from '../services/layoutService';
 import {
   createNewElement,
@@ -26,6 +27,8 @@ const BuildMode = () => {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [contentPosition, setContentPosition] = useState({ x: 0, y: 0 });
   const [isDraggingObject, setIsDraggingObject] = useState(false);
+  const [showLayoutDialog, setShowLayoutDialog] = useState(false);
+  const [selectedLayoutForAction, setSelectedLayoutForAction] = useState('');
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -34,7 +37,7 @@ const BuildMode = () => {
         const names = await fetchLayoutNames();
         setSavedLayouts(names);
       } catch (err) {
-        console.error('Error fetching layouts', err);
+        console.error('Error fetching layouts:', err);
       }
     };
 
@@ -71,7 +74,6 @@ const BuildMode = () => {
   const handleDrag = (id, e, offsetX, offsetY) => {
     const canvasRect = canvasRef.current.getBoundingClientRect();
 
-    // Calculate the new position based on the mouse cursor and the offset
     const newX =
       (e.clientX - canvasRect.left - offsetX) / zoomLevel - contentPosition.x;
     const newY =
@@ -90,7 +92,6 @@ const BuildMode = () => {
     const canvasRect = canvasRef.current.getBoundingClientRect();
     const element = elements.find((el) => el.id === id);
 
-    // Calculate the offset between the mouse cursor and the object's position
     const offsetX =
       e.clientX -
       canvasRect.left -
@@ -114,7 +115,7 @@ const BuildMode = () => {
   };
 
   const handleCanvasMouseDown = (e) => {
-    if (isDraggingObject) return; // Prevent canvas panning while dragging an object
+    if (isDraggingObject) return;
 
     const startX = e.clientX;
     const startY = e.clientY;
@@ -179,7 +180,7 @@ const BuildMode = () => {
       const names = await fetchLayoutNames();
       setSavedLayouts(names);
     } catch (err) {
-      console.error('Error saving layout', err);
+      console.error('Error saving layout:', err);
       alert('Failed to save layout');
     }
   };
@@ -189,7 +190,19 @@ const BuildMode = () => {
       const loadedElements = await fetchLayoutByName(name);
       setElements(loadedElements);
     } catch (err) {
-      console.error('Failed to load layout', err);
+      console.error('Failed to load layout:', err);
+    }
+  };
+
+  const handleDeleteLayout = async () => {
+    try {
+      await deleteLayout(selectedLayoutForAction);
+      alert(`Layout '${selectedLayoutForAction}' deleted successfully.`);
+      setSavedLayouts(savedLayouts.filter((name) => name !== selectedLayoutForAction));
+      setShowLayoutDialog(false);
+    } catch (err) {
+      console.error('Failed to delete layout:', err);
+      alert('Failed to delete layout. Please try again.');
     }
   };
 
@@ -218,11 +231,14 @@ const BuildMode = () => {
         </button>
 
         <select
-          onChange={(e) => handleLoadLayout(e.target.value)}
+          onChange={(e) => {
+            setSelectedLayoutForAction(e.target.value);
+            setShowLayoutDialog(true);
+          }}
           defaultValue=""
         >
           <option value="" disabled>
-            Load Layout
+            Select Layout
           </option>
           {savedLayouts.map((name) => (
             <option key={name} value={name}>
@@ -233,53 +249,46 @@ const BuildMode = () => {
       </div>
 
       <CanvasWrapper onTransformChange={handleTransformChange}>
-        {elements.map((el) => {
-          if (!el || !el.id || !el.x || !el.y || !el.width || !el.height) {
-            console.error('Invalid element:', el);
-            return null;
-          }
-
-          return (
-            <div
-              key={el.id}
-              className={`element ${el.type} ${
-                selectedTables.find((t) => t.id === el.id) ? 'selected' : ''
-              }`}
-              style={{
-                left: el.x,
-                top: el.y,
-                width: el.width,
-                height: el.height,
-                position: 'absolute',
-                cursor: 'pointer',
+        {elements.map((el) => (
+          <div
+            key={el.id}
+            className={`element ${el.type} ${
+              selectedTables.find((t) => t.id === el.id) ? 'selected' : ''
+            }`}
+            style={{
+              left: el.x,
+              top: el.y,
+              width: el.width,
+              height: el.height,
+              position: 'absolute',
+              cursor: 'pointer',
+            }}
+            onMouseDown={(e) => handleMouseDown(el.id, e)}
+            onClick={() => toggleSelect(el)}
+            onDoubleClick={() => handleDoubleClick(el)}
+          >
+            {editingId === el.id ? (
+              <input
+                value={editingName}
+                onChange={(e) => setEditingName(e.target.value)}
+                onBlur={applyEdit}
+                onKeyDown={(e) => e.key === 'Enter' && applyEdit()}
+                autoFocus
+              />
+            ) : (
+              <span className="label">{el.name}</span>
+            )}
+            <button
+              className="delete-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteElement(el.id);
               }}
-              onMouseDown={(e) => handleMouseDown(el.id, e)}
-              onClick={() => toggleSelect(el)}
-              onDoubleClick={() => handleDoubleClick(el)}
             >
-              {editingId === el.id ? (
-                <input
-                  value={editingName}
-                  onChange={(e) => setEditingName(e.target.value)}
-                  onBlur={applyEdit}
-                  onKeyDown={(e) => e.key === 'Enter' && applyEdit()}
-                  autoFocus
-                />
-              ) : (
-                <span className="label">{el.name}</span>
-              )}
-              <button
-                className="delete-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteElement(el.id);
-                }}
-              >
-                ×
-              </button>
-            </div>
-          );
-        })}
+              ×
+            </button>
+          </div>
+        ))}
       </CanvasWrapper>
 
       {showModal && (
@@ -307,6 +316,29 @@ const BuildMode = () => {
             >
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+
+      {showLayoutDialog && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>What would you like to do with the layout '{selectedLayoutForAction}'?</h3>
+            <div style={{ marginTop: '10px' }}>
+              <button onClick={() => handleLoadLayout(selectedLayoutForAction)}>Load</button>
+              <button
+                onClick={handleDeleteLayout}
+                style={{ marginLeft: '10px', backgroundColor: 'red', color: 'white' }}
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => setShowLayoutDialog(false)}
+                style={{ marginLeft: '10px' }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

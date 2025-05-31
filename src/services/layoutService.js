@@ -25,3 +25,7 @@ export const assignSeatToGuest = async (layoutName, seatId, guestName) => {
     guestName,
   });
 };
+
+export const deleteLayout = async (name) => {
+  return axios.delete(`${API_BASE_URL}/layouts/${name}`);
+};
