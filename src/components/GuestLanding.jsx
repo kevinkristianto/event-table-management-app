@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './GuestStyles.css';
+import logo from '../../src/assets/images/wedding_logo.svg';
 
 const GuestLanding = () => {
   const [name, setName] = useState('');
@@ -36,7 +37,8 @@ const GuestLanding = () => {
   };
 
   return (
-    <div>
+    <div className="guest-landing">
+      <img alt="Wedding Logo" className="app-body-logo" src={logo} />
       <h2 className="guest-title">
         Welcome to Kevin and Leticia's Wedding Reception
       </h2>

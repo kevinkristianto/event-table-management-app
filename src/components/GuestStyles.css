@@ -6,6 +6,16 @@
   color: #fefae0;
 }
 
+.guest-landing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 20px;
+  text-align: center;
+}
+
 .guest-input {
   width: 100%;
   padding: 10px;
@@ -95,12 +105,10 @@
 }
 
 .guest-form {
-  max-width: 400px;
   width: 100%;
-  background-color: #606c38;
+  background-color: #550000;
   padding: 30px;
   border-radius: 12px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   margin: 0 auto;
   color: #fefae0;
 }
@@ -111,7 +119,7 @@
   text-align: center;
   font-size: 28px;
   font-weight: bold;
-  color: #283618;
+  color: #fefae0;
 }
 
 .guest-error {
@@ -200,4 +208,13 @@
 
 .edit-button:hover {
   background-color: #bc6c25; /* Hover effect consistent with GuestForm */
+}
+
+.app-body-logo {
+  height: 100px;
+  width: auto;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+  margin-bottom: 20px;
 }

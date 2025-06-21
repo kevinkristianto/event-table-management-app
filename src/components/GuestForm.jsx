@@ -35,8 +35,21 @@ const GuestForm = () => {
           setMenuType(savedMenu);
           setMenuSelection('');
           setSteakCook('');
-        } else if (['Salmon al Forno', 'Grilled Ribeye'].includes(savedMenu)) {
-          setMenuType('Standard');
+        } else if (
+          [
+            'Salmon al Forno',
+            'Grilled Ribeye',
+            'Aubergine Schnitzels',
+            'Roasted Cauliflower',
+          ].includes(savedMenu)
+        ) {
+          const inferredType = [
+            'Aubergine Schnitzels',
+            'Roasted Cauliflower',
+          ].includes(savedMenu)
+            ? 'Vegan'
+            : 'Standard';
+          setMenuType(inferredType);
           setMenuSelection(savedMenu);
           setSteakCook(res.data.steakCook || '');
         } else {
@@ -80,7 +93,7 @@ const GuestForm = () => {
       return;
     }
 
-    if (menuType === 'Standard' && !menuSelection) {
+    if (!menuSelection) {
       setMessage('Please select a main course.');
       return;
     }
@@ -180,6 +193,25 @@ const GuestForm = () => {
           </div>
         )}
 
+        {menuType === 'Vegan' && (
+          <div style={{ marginTop: 20 }}>
+            <label className="guest-select-label">
+              Please select your vegan main course:
+            </label>
+            <br />
+            <select
+              value={menuSelection}
+              onChange={(e) => handleMenuSelectionChange(e.target.value)}
+              required
+              className="guest-select"
+            >
+              <option value="">-- Select --</option>
+              <option value="Aubergine Schnitzels">Aubergine Schnitzels</option>
+              <option value="Roasted Cauliflower">Roasted Cauliflower</option>
+            </select>
+          </div>
+        )}
+
         {menuSelection === 'Grilled Ribeye' && (
           <div style={{ marginTop: 20 }}>
             <label className="guest-select-label">
@@ -211,7 +243,7 @@ const GuestForm = () => {
           </div>
         )}
 
-        {(menuType === 'Vegan' || menuSelection) && (
+        {menuType && menuSelection && (
           <div style={{ marginTop: 20 }}>
             <label className="guest-select-label">
               Please select any food allergies or dietary requirements:

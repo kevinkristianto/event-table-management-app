@@ -4,53 +4,59 @@ import { Link } from 'react-router-dom';
 
 const GuestList = () => {
   const [guests, setGuests] = useState([]);
+  const [layoutElements, setLayoutElements] = useState([]);
   const [newGuestName, setNewGuestName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+
+  const layoutName = 'showcase-1';
 
   const fetchGuests = async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/guests');
       setGuests(res.data || []);
-    } catch (err) {
-      console.error(err);
+    } catch {
       setError('Failed to load guests.');
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const fetchLayout = async () => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/layouts/${layoutName}`);
+      setLayoutElements(res.data.elements || []);
+    } catch {
+      setLayoutElements([]);
     }
   };
 
   useEffect(() => {
-    fetchGuests();
+    async function fetchAll() {
+      setLoading(true);
+      await Promise.all([fetchGuests(), fetchLayout()]);
+      setLoading(false);
+    }
+    fetchAll();
   }, []);
+
+  const getSeatNameForGuest = (guestName) => {
+    if (!guestName) return 'N/A';
+    const seat = layoutElements.find(el => el.guest && el.guest.toLowerCase() === guestName.toLowerCase());
+    return seat ? seat.name : 'N/A';
+  };
 
   const handleAddGuest = async (e) => {
     e.preventDefault();
     setError('');
-
     if (!newGuestName.trim()) {
-      setError('Please enter a guest name.');
+      setError('Guest name cannot be empty');
       return;
     }
-
-    if (
-      guests.find(
-        (g) => g.name.toLowerCase() === newGuestName.trim().toLowerCase()
-      )
-    ) {
-      setError('Guest with this name already exists.');
-      return;
-    }
-
     try {
-      await axios.post('http://localhost:5000/api/guests', {
-        name: newGuestName.trim(),
-      });
+      await axios.post('http://localhost:5000/api/guests', { name: newGuestName.trim() });
       setNewGuestName('');
       fetchGuests();
     } catch (err) {
-      console.error(err);
-      setError('Failed to add guest.');
+      setError(err.response?.data?.error || 'Failed to add guest');
     }
   };
 
@@ -59,9 +65,8 @@ const GuestList = () => {
     try {
       await axios.delete(`http://localhost:5000/api/guests/${guestToken}`);
       fetchGuests();
-    } catch (err) {
-      console.error(err);
-      setError('Failed to delete guest.');
+    } catch {
+      setError('Failed to delete guest');
     }
   };
 
@@ -70,7 +75,6 @@ const GuestList = () => {
   return (
     <div>
       <h2>Guest List (Admin)</h2>
-
       <form onSubmit={handleAddGuest} style={{ marginBottom: 20 }}>
         <input
           type="text"
@@ -78,60 +82,36 @@ const GuestList = () => {
           value={newGuestName}
           onChange={(e) => setNewGuestName(e.target.value)}
         />
-        <button type="submit" style={{ marginLeft: 10 }}>
-          Add Guest
-        </button>
+        <button type="submit" style={{ marginLeft: 10 }}>Add Guest</button>
       </form>
-
       {error && <p style={{ color: 'red' }}>{error}</p>}
-
       <table border={1} cellPadding={5} cellSpacing={0}>
         <thead>
           <tr>
             <th>Name</th>
             <th>Guest Token (Link)</th>
             <th>Menu</th>
-            <th>Steak Cook</th> {/* New Column */}
+            <th>Steak Cook</th>
             <th>Allergies</th>
+            <th>Seat Name</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {guests.length === 0 ? (
             <tr>
-              <td colSpan={6}>No guests found.</td> {/* Updated colspan */}
+              <td colSpan={7}>No guests found.</td>
             </tr>
           ) : (
-            guests.map((g) => (
+            guests.map(g => (
               <tr key={g.guestToken || g.id}>
                 <td>{g.name || 'N/A'}</td>
-                <td>
-                  {g.guestToken ? (
-                    <Link to={`/guest/${g.guestToken}`}>
-                      {g.guestToken.slice(0, 8)}...
-                    </Link>
-                  ) : (
-                    'No token'
-                  )}
-                </td>
+                <td>{g.guestToken ? <Link to={`/guest/${g.guestToken}`}>{g.guestToken.slice(0, 8)}...</Link> : 'No token'}</td>
                 <td>{g.menu || 'Not selected'}</td>
-                <td>{g.steakCook || 'N/A'}</td>{' '}
-                {/* Render steak cook preference */}
-                <td>
-                  {Array.isArray(g.allergies) ? g.allergies.join(', ') : ''}
-                </td>
-                <td>
-                  <button
-                    onClick={() => handleDeleteGuest(g.guestToken)}
-                    style={{
-                      backgroundColor: 'red',
-                      color: 'white',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Delete
-                  </button>
-                </td>
+                <td>{g.steakCook || 'N/A'}</td>
+                <td>{Array.isArray(g.allergies) ? g.allergies.join(', ') : ''}</td>
+                <td>{getSeatNameForGuest(g.name)}</td>
+                <td><button onClick={() => handleDeleteGuest(g.guestToken)} style={{ backgroundColor: 'red', color: 'white', cursor: 'pointer' }}>Delete</button></td>
               </tr>
             ))
           )}
