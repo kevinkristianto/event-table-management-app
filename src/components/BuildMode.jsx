@@ -153,6 +153,16 @@ const BuildMode = () => {
     setSelectedTables(newSelectedTables);
   };
 
+  const rotateElement = (id) => {
+    setElements((prevElements) =>
+      prevElements.map((el) =>
+        el.id === id || (el.joinedFrom && el.joinedFrom.includes(id))
+          ? { ...el, rotation: ((el.rotation || 0) + 45) % 360 }
+          : el
+      )
+    );
+  };
+
   const handleDoubleClick = (el) => {
     setEditingId(el.id);
     setEditingName(el.name);
@@ -198,7 +208,9 @@ const BuildMode = () => {
     try {
       await deleteLayout(selectedLayoutForAction);
       alert(`Layout '${selectedLayoutForAction}' deleted successfully.`);
-      setSavedLayouts(savedLayouts.filter((name) => name !== selectedLayoutForAction));
+      setSavedLayouts(
+        savedLayouts.filter((name) => name !== selectedLayoutForAction)
+      );
       setShowLayoutDialog(false);
     } catch (err) {
       console.error('Failed to delete layout:', err);
@@ -262,6 +274,8 @@ const BuildMode = () => {
               height: el.height,
               position: 'absolute',
               cursor: 'pointer',
+              transform: `rotate(${el.rotation || 0}deg)`,
+              transformOrigin: 'center center',
             }}
             onMouseDown={(e) => handleMouseDown(el.id, e)}
             onClick={() => toggleSelect(el)}
@@ -278,6 +292,30 @@ const BuildMode = () => {
             ) : (
               <span className="label">{el.name}</span>
             )}
+
+            {selectedTables.find((t) => t.id === el.id) && (
+              <button
+                className="rotate-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  rotateElement(el.id);
+                }}
+                style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '0',
+                  background: '#ddd',
+                  border: '1px solid #aaa',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  padding: '2px 5px',
+                  cursor: 'pointer',
+                }}
+              >
+                🔄
+              </button>
+            )}
+
             <button
               className="delete-btn"
               onClick={(e) => {
@@ -323,12 +361,21 @@ const BuildMode = () => {
       {showLayoutDialog && (
         <div className="modal">
           <div className="modal-content">
-            <h3>What would you like to do with the layout '{selectedLayoutForAction}'?</h3>
+            <h3>
+              What would you like to do with the layout '
+              {selectedLayoutForAction}'?
+            </h3>
             <div style={{ marginTop: '10px' }}>
-              <button onClick={() => handleLoadLayout(selectedLayoutForAction)}>Load</button>
+              <button onClick={() => handleLoadLayout(selectedLayoutForAction)}>
+                Load
+              </button>
               <button
                 onClick={handleDeleteLayout}
-                style={{ marginLeft: '10px', backgroundColor: 'red', color: 'white' }}
+                style={{
+                  marginLeft: '10px',
+                  backgroundColor: 'red',
+                  color: 'white',
+                }}
               >
                 Delete
               </button>

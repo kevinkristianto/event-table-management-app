@@ -22,6 +22,7 @@ export const createNewElement = (
     y: centerY,
     width: type === 'table' ? TABLE_SIZE : CHAIR_SIZE,
     height: type === 'table' ? TABLE_SIZE : CHAIR_SIZE,
+    rotation: 0,
   };
 };
 
@@ -64,9 +65,8 @@ export const joinTables = (elements, selectedTables) => {
     return { updatedElements: elements, newSelectedTables: selectedTables };
 
   const totalWidth = selectedTables.reduce((sum, t) => sum + t.width, 0);
-  const avgY =
-    selectedTables.reduce((sum, t) => sum + t.y, 0) / selectedTables.length;
-  const minX = Math.min(...selectedTables.map((t) => t.x));
+  const baseY = selectedTables[0].y; // Align to Y of first selected
+  const startX = Math.min(...selectedTables.map((t) => t.x)); // Leftmost start
   const joinedFrom = selectedTables.flatMap((t) =>
     t.joinedFrom ? t.joinedFrom : [t.id]
   );
@@ -75,10 +75,11 @@ export const joinTables = (elements, selectedTables) => {
     id: Date.now(),
     type: 'table',
     name: '',
-    x: minX,
-    y: avgY,
+    x: startX,
+    y: baseY,
     width: totalWidth,
     height: TABLE_SIZE,
+    rotation: 0,
     joinedFrom,
   };
 

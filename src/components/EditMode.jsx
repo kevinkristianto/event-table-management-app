@@ -176,6 +176,8 @@ const EditMode = () => {
                 overflow: 'hidden',
                 padding: '5px',
                 boxSizing: 'border-box',
+                transform: `rotate(${el.rotation || 0}deg)`,
+                transformOrigin: 'center center',
               }}
               onClick={() => el.type === 'chair' && handleChairClick(el.id)}
             >
@@ -187,7 +189,7 @@ const EditMode = () => {
                 <div
                   className="guest-name"
                   style={{
-                    fontSize: `${4 * zoomLevel}px`, // Dynamically scale font size with zoom level
+                    fontSize: `${4 * zoomLevel}px`,
                   }}
                 >
                   {el.guest.split(' ').map((part, index) => (
