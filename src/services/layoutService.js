@@ -29,3 +29,10 @@ export const assignSeatToGuest = async (layoutName, seatId, guestName) => {
 export const deleteLayout = async (name) => {
   return axios.delete(`${API_BASE_URL}/layouts/${name}`);
 };
+
+export const removeGuestFromSeat = async (layoutName, seatId) => {
+  return axios.post(`${API_BASE_URL}/layouts/${layoutName}/assign-seat`, {
+    seatId,
+    guestName: '',
+  });
+};

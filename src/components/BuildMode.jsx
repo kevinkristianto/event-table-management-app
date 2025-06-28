@@ -13,6 +13,7 @@ import {
   joinTables as joinTablesService,
   applyNameEdit,
   deleteElementById,
+  toggleChairSelection,
 } from '../services/propertiesBuildService';
 
 const BuildMode = () => {
@@ -20,6 +21,7 @@ const BuildMode = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedType, setSelectedType] = useState('table');
   const [selectedTables, setSelectedTables] = useState([]);
+  const [selectedChairs, setSelectedChairs] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editingName, setEditingName] = useState('');
   const [layoutName, setLayoutName] = useState('');
@@ -140,8 +142,13 @@ const BuildMode = () => {
   };
 
   const toggleSelect = (el) => {
-    const updatedSelection = toggleTableSelection(selectedTables, el);
-    setSelectedTables(updatedSelection);
+    if (el.type === 'table') {
+      const updatedSelection = toggleTableSelection(selectedTables, el);
+      setSelectedTables(updatedSelection);
+    } else if (el.type === 'chair') {
+      const updatedSelection = toggleChairSelection(selectedChairs, el);
+      setSelectedChairs(updatedSelection);
+    }
   };
 
   const joinTables = () => {
@@ -157,7 +164,7 @@ const BuildMode = () => {
     setElements((prevElements) =>
       prevElements.map((el) =>
         el.id === id || (el.joinedFrom && el.joinedFrom.includes(id))
-          ? { ...el, rotation: ((el.rotation || 0) + 45) % 360 }
+          ? { ...el, rotation: ((el.rotation || 0) - 45) % 360 }
           : el
       )
     );
@@ -293,7 +300,8 @@ const BuildMode = () => {
               <span className="label">{el.name}</span>
             )}
 
-            {selectedTables.find((t) => t.id === el.id) && (
+            {(selectedTables.find((t) => t.id === el.id) ||
+              selectedChairs.find((c) => c.id === el.id)) && (
               <button
                 className="rotate-btn"
                 onClick={(e) => {

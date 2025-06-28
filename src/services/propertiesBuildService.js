@@ -60,6 +60,17 @@ export const toggleTableSelection = (selectedTables, element) => {
   }
 };
 
+export const toggleChairSelection = (selectedChairs, element) => {
+  if (element.type !== 'chair') return selectedChairs;
+
+  const isSelected = selectedChairs.some((c) => c.id === element.id);
+  if (isSelected) {
+    return selectedChairs.filter((c) => c.id !== element.id);
+  } else {
+    return [...selectedChairs, element];
+  }
+};
+
 export const joinTables = (elements, selectedTables) => {
   if (selectedTables.length < 2)
     return { updatedElements: elements, newSelectedTables: selectedTables };

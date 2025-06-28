@@ -6,6 +6,7 @@ import {
   fetchLayoutNames,
   fetchLayoutByName,
   assignSeatToGuest,
+  removeGuestFromSeat,
 } from '../services/layoutService';
 
 const EditMode = () => {
@@ -84,20 +85,18 @@ const EditMode = () => {
 
   const handleRemoveGuest = async () => {
     try {
-      setLayout((prevLayout) =>
-        prevLayout.map((el) =>
-          el.id === selectedSeatId ? { ...el, guest: null } : el
-        )
+      const updatedLayout = layout.map((el) =>
+        el.id === selectedSeatId ? { ...el, guest: '' } : el
       );
+      setLayout(updatedLayout);
 
-      await axios.post(
-        `http://localhost:5000/api/layouts/${selectedLayoutName}/assign-seat`,
-        { seatId: selectedSeatId, guestName: null }
-      );
+      await removeGuestFromSeat(selectedLayoutName, String(selectedSeatId));
 
-      console.log('Guest removed successfully.');
+      console.log('Guest removed and saved successfully.');
+      alert('Guest removed successfully.');
     } catch (err) {
-      console.error('Failed to remove guest', err);
+      console.error('Failed to remove guest:', err);
+      alert('Failed to remove guest. Please try again.');
     } finally {
       setGuestName('');
       setGuestSuggestions([]);
