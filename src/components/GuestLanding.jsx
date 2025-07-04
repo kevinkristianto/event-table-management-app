@@ -18,7 +18,7 @@ const GuestLanding = () => {
     }
 
     try {
-      const res = await axios.get('http://localhost:5000/api/guests');
+      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/guests`);
       const guests = res.data;
 
       const guest = guests.find(

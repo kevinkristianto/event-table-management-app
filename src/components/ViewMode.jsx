@@ -32,7 +32,7 @@ const ViewMode = () => {
 
     const fetchGuests = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/guests');
+        const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/guests`);
         setGuests(res.data);
       } catch (err) {
         console.error('Failed to fetch guests:', err);
@@ -117,7 +117,11 @@ const ViewMode = () => {
               onClick={() => el.type === 'chair' && handleChairClick(el)}
             >
               {/* Seat Label */}
-              <span className="seat-label">{el.name}</span>
+              {el.type === 'others' ? (
+                <span className="others-label">{el.name}</span>
+              ) : (
+                <span className="seat-label">{el.name}</span>
+              )}
 
               {/* Guest Name */}
               {el.guest && (

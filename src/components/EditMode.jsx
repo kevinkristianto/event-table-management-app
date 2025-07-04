@@ -28,7 +28,7 @@ const EditMode = () => {
 
   const fetchGuests = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/guests');
+      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/guests`);
       const guestNames = res.data.map((g) => g.name);
       setAllGuests(guestNames);
     } catch (err) {
@@ -181,7 +181,11 @@ const EditMode = () => {
               onClick={() => el.type === 'chair' && handleChairClick(el.id)}
             >
               {/* Seat Label */}
-              <span className="seat-label">{el.name}</span>
+              {el.type === 'others' ? (
+                <span className="others-label">{el.name}</span>
+              ) : (
+                <span className="seat-label">{el.name}</span>
+              )}
 
               {/* Guest Name */}
               {el.guest && (

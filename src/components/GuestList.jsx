@@ -13,7 +13,7 @@ const GuestList = () => {
 
   const fetchGuests = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/guests');
+      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/guests`);
       setGuests(res.data || []);
     } catch {
       setError('Failed to load guests.');
@@ -23,7 +23,7 @@ const GuestList = () => {
   const fetchLayout = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/layouts/${layoutName}`
+        `${process.env.REACT_APP_BACKEND_URL}/api/layouts/${layoutName}`
       );
       setLayoutElements(res.data.elements || []);
     } catch {
@@ -56,7 +56,7 @@ const GuestList = () => {
       return;
     }
     try {
-      await axios.post('http://localhost:5000/api/guests', {
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/guests`, {
         name: newGuestName.trim(),
       });
       setNewGuestName('');
@@ -69,7 +69,7 @@ const GuestList = () => {
   const handleDeleteGuest = async (guestToken) => {
     if (!window.confirm('Are you sure you want to delete this guest?')) return;
     try {
-      await axios.delete(`http://localhost:5000/api/guests/${guestToken}`);
+      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/guests/${guestToken}`);
       fetchGuests();
     } catch {
       setError('Failed to delete guest');

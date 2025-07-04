@@ -26,7 +26,7 @@ const GuestForm = () => {
     if (!guestToken) return;
 
     axios
-      .get(`http://localhost:5000/api/guests/token/${guestToken}`)
+      .get(`${process.env.REACT_APP_BACKEND_URL}/api/guests/token/${guestToken}`)
       .then((res) => {
         setGuest(res.data);
 
@@ -111,7 +111,7 @@ const GuestForm = () => {
       };
 
       await axios.put(
-        `http://localhost:5000/api/guests/${guestToken}`,
+        `${process.env.REACT_APP_BACKEND_URL}/api/guests/${guestToken}`,
         updateData
       );
 

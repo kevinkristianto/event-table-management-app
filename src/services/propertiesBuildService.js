@@ -1,5 +1,7 @@
 const TABLE_SIZE = 60;
 const CHAIR_SIZE = 30;
+const OTHERS_DEFAULT_WIDTH = 100;
+const OTHERS_DEFAULT_HEIGHT = 60;
 
 export const createNewElement = (
   type,
@@ -7,12 +9,23 @@ export const createNewElement = (
   zoomLevel,
   contentPosition
 ) => {
-  const centerX =
-    (canvasRect.width / 2 - contentPosition.x) / zoomLevel -
-    (type === 'table' ? TABLE_SIZE / 2 : CHAIR_SIZE / 2);
-  const centerY =
-    (canvasRect.height / 2 - contentPosition.y) / zoomLevel -
-    (type === 'table' ? TABLE_SIZE / 2 : CHAIR_SIZE / 2);
+  let centerX, centerY, width, height;
+  if (type === 'table') {
+    width = TABLE_SIZE;
+    height = TABLE_SIZE;
+    centerX = (canvasRect.width / 2 - contentPosition.x) / zoomLevel - width / 2;
+    centerY = (canvasRect.height / 2 - contentPosition.y) / zoomLevel - height / 2;
+  } else if (type === 'chair') {
+    width = CHAIR_SIZE;
+    height = CHAIR_SIZE;
+    centerX = (canvasRect.width / 2 - contentPosition.x) / zoomLevel - width / 2;
+    centerY = (canvasRect.height / 2 - contentPosition.y) / zoomLevel - height / 2;
+  } else if (type === 'others') {
+    width = OTHERS_DEFAULT_WIDTH;
+    height = OTHERS_DEFAULT_HEIGHT;
+    centerX = (canvasRect.width / 2 - contentPosition.x) / zoomLevel - width / 2;
+    centerY = (canvasRect.height / 2 - contentPosition.y) / zoomLevel - height / 2;
+  }
 
   return {
     id: Date.now(),
@@ -20,8 +33,8 @@ export const createNewElement = (
     name: '',
     x: centerX,
     y: centerY,
-    width: type === 'table' ? TABLE_SIZE : CHAIR_SIZE,
-    height: type === 'table' ? TABLE_SIZE : CHAIR_SIZE,
+    width,
+    height,
     rotation: 0,
   };
 };

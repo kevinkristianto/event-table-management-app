@@ -31,7 +31,16 @@ const BuildMode = () => {
   const [isDraggingObject, setIsDraggingObject] = useState(false);
   const [showLayoutDialog, setShowLayoutDialog] = useState(false);
   const [selectedLayoutForAction, setSelectedLayoutForAction] = useState('');
+  const [resizing, setResizing] = useState({
+    id: null,
+    direction: null,
+    startX: 0,
+    startY: 0,
+    startWidth: 0,
+    startHeight: 0,
+  });
   const canvasRef = useRef(null);
+  const resizingRef = useRef();
 
   useEffect(() => {
     const loadLayoutNames = async () => {
@@ -45,6 +54,10 @@ const BuildMode = () => {
 
     loadLayoutNames();
   }, []);
+
+  useEffect(() => {
+    resizingRef.current = resizing;
+  }, [resizing]);
 
   const handleTransformChange = ({ zoomLevel, contentPosition }) => {
     setZoomLevel(zoomLevel);
@@ -164,7 +177,7 @@ const BuildMode = () => {
     setElements((prevElements) =>
       prevElements.map((el) =>
         el.id === id || (el.joinedFrom && el.joinedFrom.includes(id))
-          ? { ...el, rotation: ((el.rotation || 0) - 45) % 360 }
+          ? { ...el, rotation: ((el.rotation || 0) - 10) % 360 }
           : el
       )
     );
@@ -223,6 +236,52 @@ const BuildMode = () => {
       console.error('Failed to delete layout:', err);
       alert('Failed to delete layout. Please try again.');
     }
+  };
+
+  const startResizing = (id, direction, e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const el = elements.find((el) => el.id === id);
+    setResizing({
+      id,
+      direction,
+      startX: e.clientX,
+      startY: e.clientY,
+      startWidth: el.width,
+      startHeight: el.height,
+    });
+    window.addEventListener('mousemove', handleResizing);
+    window.addEventListener('mouseup', stopResizing);
+  };
+
+  const handleResizing = (e) => {
+    const resizing = resizingRef.current;
+    if (!resizing || !resizing.id) return;
+    setElements((prev) =>
+      prev.map((el) => {
+        if (el.id !== resizing.id) return el;
+        let newWidth = resizing.startWidth;
+        let newHeight = resizing.startHeight;
+        if (resizing.direction === 'se') {
+          newWidth = Math.max(20, resizing.startWidth + (e.clientX - resizing.startX));
+          newHeight = Math.max(20, resizing.startHeight + (e.clientY - resizing.startY));
+        }
+        return { ...el, width: newWidth, height: newHeight };
+      })
+    );
+  };
+
+  const stopResizing = () => {
+    setResizing({
+      id: null,
+      direction: null,
+      startX: 0,
+      startY: 0,
+      startWidth: 0,
+      startHeight: 0,
+    });
+    window.removeEventListener('mousemove', handleResizing);
+    window.removeEventListener('mouseup', stopResizing);
   };
 
   return (
@@ -300,7 +359,25 @@ const BuildMode = () => {
               <span className="label">{el.name}</span>
             )}
 
-            {(selectedTables.find((t) => t.id === el.id) ||
+            {/* Resize handle for 'others' type */}
+            {el.type === 'others' && (
+              <div
+                className="resize-handle"
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  bottom: 0,
+                  width: 12,
+                  height: 12,
+                  background: '#333',
+                  cursor: 'se-resize',
+                  zIndex: 2,
+                }}
+                onMouseDown={(e) => startResizing(el.id, 'se', e)}
+              />
+            )}
+
+            {(el.type === 'table' || el.type === 'others' || selectedTables.find((t) => t.id === el.id) ||
               selectedChairs.find((c) => c.id === el.id)) && (
               <button
                 className="rotate-btn"
@@ -353,6 +430,12 @@ const BuildMode = () => {
                 onClick={() => setSelectedType('chair')}
               >
                 Chair
+              </button>
+              <button
+                className={selectedType === 'others' ? 'active' : ''}
+                onClick={() => setSelectedType('others')}
+              >
+                Rectangle
               </button>
             </div>
             <button onClick={addElement}>Add {selectedType}</button>
