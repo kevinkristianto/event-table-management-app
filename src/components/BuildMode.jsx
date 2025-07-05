@@ -177,7 +177,7 @@ const BuildMode = () => {
     setElements((prevElements) =>
       prevElements.map((el) =>
         el.id === id || (el.joinedFrom && el.joinedFrom.includes(id))
-          ? { ...el, rotation: ((el.rotation || 0) - 10) % 360 }
+          ? { ...el, rotation: ((el.rotation || 0) - 45) % 360 }
           : el
       )
     );
