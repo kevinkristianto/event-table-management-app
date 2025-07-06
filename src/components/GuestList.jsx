@@ -13,7 +13,9 @@ const GuestList = () => {
 
   const fetchGuests = async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/guests`);
+      const res = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/api/guests`
+      );
       setGuests(res.data || []);
     } catch {
       setError('Failed to load guests.');
@@ -69,7 +71,9 @@ const GuestList = () => {
   const handleDeleteGuest = async (guestToken) => {
     if (!window.confirm('Are you sure you want to delete this guest?')) return;
     try {
-      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/guests/${guestToken}`);
+      await axios.delete(
+        `${process.env.REACT_APP_BACKEND_URL}/api/guests/${guestToken}`
+      );
       fetchGuests();
     } catch {
       setError('Failed to delete guest');
@@ -99,6 +103,7 @@ const GuestList = () => {
             <th>Name</th>
             <th>Guest Token (Link)</th>
             <th>Menu</th>
+            <th>Appetiser</th> {/* New column */}
             <th>Steak Cook</th>
             <th>Allergies</th>
             <th>Seat Name</th>
@@ -108,7 +113,7 @@ const GuestList = () => {
         <tbody>
           {guests.length === 0 ? (
             <tr>
-              <td colSpan={7}>No guests found.</td>
+              <td colSpan={8}>No guests found.</td> {/* update colspan */}
             </tr>
           ) : (
             guests.map((g) => (
@@ -124,6 +129,7 @@ const GuestList = () => {
                   )}
                 </td>
                 <td>{g.menu || 'Not selected'}</td>
+                <td>{g.appetiser || 'N/A'}</td> {/* Display appetiser */}
                 <td>{g.steakCook || 'N/A'}</td>
                 <td>
                   {Array.isArray(g.allergies) ? g.allergies.join(', ') : ''}

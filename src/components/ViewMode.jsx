@@ -32,7 +32,9 @@ const ViewMode = () => {
 
     const fetchGuests = async () => {
       try {
-        const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/guests`);
+        const res = await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL}/api/guests`
+        );
         setGuests(res.data);
       } catch (err) {
         console.error('Failed to fetch guests:', err);

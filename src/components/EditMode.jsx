@@ -28,7 +28,9 @@ const EditMode = () => {
 
   const fetchGuests = async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/guests`);
+      const res = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/api/guests`
+      );
       const guestNames = res.data.map((g) => g.name);
       setAllGuests(guestNames);
     } catch (err) {

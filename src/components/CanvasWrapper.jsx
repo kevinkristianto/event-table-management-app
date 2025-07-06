@@ -78,7 +78,8 @@ const CanvasWrapper = ({ children, onTransformChange }) => {
       // Pinch zoom
       const newDistance = getTouchDistance(e.touches);
       const delta = newDistance - lastPinchDistance;
-      if (Math.abs(delta) > 2) { // threshold to avoid jitter
+      if (Math.abs(delta) > 2) {
+        // threshold to avoid jitter
         setZoomLevel((prev) => {
           let next = prev + delta * 0.003; // adjust sensitivity as needed
           next = Math.min(Math.max(next, 0.5), 2);

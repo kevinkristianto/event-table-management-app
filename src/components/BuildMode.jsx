@@ -263,8 +263,14 @@ const BuildMode = () => {
         let newWidth = resizing.startWidth;
         let newHeight = resizing.startHeight;
         if (resizing.direction === 'se') {
-          newWidth = Math.max(20, resizing.startWidth + (e.clientX - resizing.startX));
-          newHeight = Math.max(20, resizing.startHeight + (e.clientY - resizing.startY));
+          newWidth = Math.max(
+            20,
+            resizing.startWidth + (e.clientX - resizing.startX)
+          );
+          newHeight = Math.max(
+            20,
+            resizing.startHeight + (e.clientY - resizing.startY)
+          );
         }
         return { ...el, width: newWidth, height: newHeight };
       })
@@ -377,7 +383,9 @@ const BuildMode = () => {
               />
             )}
 
-            {(el.type === 'table' || el.type === 'others' || selectedTables.find((t) => t.id === el.id) ||
+            {(el.type === 'table' ||
+              el.type === 'others' ||
+              selectedTables.find((t) => t.id === el.id) ||
               selectedChairs.find((c) => c.id === el.id)) && (
               <button
                 className="rotate-btn"

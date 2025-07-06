@@ -17,6 +17,7 @@ const GuestForm = () => {
   const navigate = useNavigate();
   const [guest, setGuest] = useState(null);
   const [menuType, setMenuType] = useState('');
+  const [appetiser, setAppetiser] = useState('Beef Carpaccio');
   const [menuSelection, setMenuSelection] = useState('');
   const [steakCook, setSteakCook] = useState('');
   const [allergies, setAllergies] = useState([]);
@@ -26,7 +27,9 @@ const GuestForm = () => {
     if (!guestToken) return;
 
     axios
-      .get(`${process.env.REACT_APP_BACKEND_URL}/api/guests/token/${guestToken}`)
+      .get(
+        `${process.env.REACT_APP_BACKEND_URL}/api/guests/token/${guestToken}`
+      )
       .then((res) => {
         setGuest(res.data);
 
@@ -35,6 +38,11 @@ const GuestForm = () => {
           setMenuType(savedMenu);
           setMenuSelection('');
           setSteakCook('');
+          if (savedMenu === 'Standard') {
+            setAppetiser('Beef Carpaccio');
+          } else {
+            setAppetiser('');
+          }
         } else if (
           [
             'Salmon al Forno',
@@ -52,10 +60,16 @@ const GuestForm = () => {
           setMenuType(inferredType);
           setMenuSelection(savedMenu);
           setSteakCook(res.data.steakCook || '');
+          if (inferredType === 'Standard') {
+            setAppetiser('Beef Carpaccio');
+          } else {
+            setAppetiser('');
+          }
         } else {
           setMenuType('');
           setMenuSelection('');
           setSteakCook('');
+          setAppetiser('');
         }
 
         setAllergies(res.data.allergies || []);
@@ -77,6 +91,11 @@ const GuestForm = () => {
     setMenuType(type);
     setMenuSelection('');
     setSteakCook('');
+    if (type === 'Standard') {
+      setAppetiser('Beef Carpaccio');
+    } else {
+      setAppetiser('');
+    }
   };
 
   const handleMenuSelectionChange = (value) => {
@@ -93,6 +112,11 @@ const GuestForm = () => {
       return;
     }
 
+    if (menuType === 'Standard' && !appetiser) {
+      setMessage('Please select an appetiser.');
+      return;
+    }
+
     if (!menuSelection) {
       setMessage('Please select a main course.');
       return;
@@ -106,6 +130,7 @@ const GuestForm = () => {
     try {
       const updateData = {
         menu: menuSelection || menuType,
+        appetiser: menuType === 'Standard' ? appetiser : null,
         allergies,
         steakCook: menuSelection === 'Grilled Ribeye' ? steakCook : null,
       };
@@ -118,6 +143,7 @@ const GuestForm = () => {
       navigate(`/guest/menu-confirmation/${guestToken}`, {
         state: {
           selection: {
+            Appetiser: menuType === 'Standard' ? appetiser : 'N/A',
             'Menu Selected': menuSelection || menuType,
             ...(menuSelection === 'Grilled Ribeye' && {
               'Steak Cooking Level': steakCook,
@@ -175,22 +201,40 @@ const GuestForm = () => {
         </label>
 
         {menuType === 'Standard' && (
-          <div style={{ marginTop: 20 }}>
-            <label className="guest-select-label">
-              Please select your main course:
-            </label>
-            <br />
-            <select
-              value={menuSelection}
-              onChange={(e) => handleMenuSelectionChange(e.target.value)}
-              required
-              className="guest-select"
-            >
-              <option value="">-- Select --</option>
-              <option value="Salmon al Forno">Salmon al Forno</option>
-              <option value="Grilled Ribeye">Grilled Ribeye</option>
-            </select>
-          </div>
+          <>
+            <div style={{ marginTop: 20 }}>
+              <label className="guest-select-label">
+                Please select an appetiser:
+              </label>
+              <br />
+              <select
+                value={appetiser}
+                onChange={(e) => setAppetiser(e.target.value)}
+                required
+                className="guest-select"
+              >
+                <option value="Beef Carpaccio">Beef Carpaccio</option>
+                <option value="Chicken Roulade">Chicken Roulade</option>
+              </select>
+            </div>
+
+            <div style={{ marginTop: 20 }}>
+              <label className="guest-select-label">
+                Please select your main course:
+              </label>
+              <br />
+              <select
+                value={menuSelection}
+                onChange={(e) => handleMenuSelectionChange(e.target.value)}
+                required
+                className="guest-select"
+              >
+                <option value="">-- Select --</option>
+                <option value="Salmon al Forno">Salmon al Forno</option>
+                <option value="Grilled Ribeye">Grilled Ribeye</option>
+              </select>
+            </div>
+          </>
         )}
 
         {menuType === 'Vegan' && (

@@ -13,18 +13,24 @@ export const createNewElement = (
   if (type === 'table') {
     width = TABLE_SIZE;
     height = TABLE_SIZE;
-    centerX = (canvasRect.width / 2 - contentPosition.x) / zoomLevel - width / 2;
-    centerY = (canvasRect.height / 2 - contentPosition.y) / zoomLevel - height / 2;
+    centerX =
+      (canvasRect.width / 2 - contentPosition.x) / zoomLevel - width / 2;
+    centerY =
+      (canvasRect.height / 2 - contentPosition.y) / zoomLevel - height / 2;
   } else if (type === 'chair') {
     width = CHAIR_SIZE;
     height = CHAIR_SIZE;
-    centerX = (canvasRect.width / 2 - contentPosition.x) / zoomLevel - width / 2;
-    centerY = (canvasRect.height / 2 - contentPosition.y) / zoomLevel - height / 2;
+    centerX =
+      (canvasRect.width / 2 - contentPosition.x) / zoomLevel - width / 2;
+    centerY =
+      (canvasRect.height / 2 - contentPosition.y) / zoomLevel - height / 2;
   } else if (type === 'others') {
     width = OTHERS_DEFAULT_WIDTH;
     height = OTHERS_DEFAULT_HEIGHT;
-    centerX = (canvasRect.width / 2 - contentPosition.x) / zoomLevel - width / 2;
-    centerY = (canvasRect.height / 2 - contentPosition.y) / zoomLevel - height / 2;
+    centerX =
+      (canvasRect.width / 2 - contentPosition.x) / zoomLevel - width / 2;
+    centerY =
+      (canvasRect.height / 2 - contentPosition.y) / zoomLevel - height / 2;
   }
 
   return {
