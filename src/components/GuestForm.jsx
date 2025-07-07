@@ -173,10 +173,10 @@ const GuestForm = () => {
 
       <form onSubmit={handleSubmit} className="guest-form">
         {guest?.name && (
-        <h3 className="guest-subtitle">
-          You are selecting menu for: <span>{guest.name}</span>
-        </h3>
-      )}
+          <h3 className="guest-subtitle">
+            You are selecting menu for: <span>{guest.name}</span>
+          </h3>
+        )}
         <p className="guest-paragraph">
           Welcome to the wedding of Kevin and Leticia reception. We will have a
           4 course menu, would you like to have the standard menu or vegan menu?

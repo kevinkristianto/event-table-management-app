@@ -8,6 +8,8 @@ const GuestList = () => {
   const [newGuestName, setNewGuestName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selectedGuestForEdit, setSelectedGuestForEdit] = useState(null);
+  const [updatedName, setUpdatedName] = useState('');
 
   const layoutName = 'kevin-cia-lobo';
 
@@ -68,6 +70,47 @@ const GuestList = () => {
     }
   };
 
+  const handleGuestAction = (action, guest) => {
+    if (action === 'update') {
+      setSelectedGuestForEdit(guest);
+      setUpdatedName(guest.name || '');
+    } else if (action === 'delete') {
+      handleDeleteGuest(guest.guestToken);
+    }
+  };
+
+  const handleDeleteGuest = async (guestToken) => {
+    if (!window.confirm('Are you sure you want to delete this guest?')) return;
+    try {
+      await axios.delete(
+        `${process.env.REACT_APP_BACKEND_URL}/api/guests/${guestToken}`
+      );
+      fetchGuests();
+    } catch {
+      setError('Failed to delete guest');
+    }
+  };
+
+  const handleUpdateGuestName = async () => {
+    try {
+      await axios.put(
+        `${process.env.REACT_APP_BACKEND_URL}/api/guests/${selectedGuestForEdit.guestToken}`,
+        {
+          name: updatedName.trim(),
+          menu: selectedGuestForEdit.menu || '',
+          appetiser: selectedGuestForEdit.appetiser || '',
+          allergies: selectedGuestForEdit.allergies || [],
+          steakCook: selectedGuestForEdit.steakCook || null,
+        }
+      );
+      setSelectedGuestForEdit(null);
+      setUpdatedName('');
+      fetchGuests();
+    } catch (err) {
+      setError('Failed to update guest name');
+    }
+  };
+
   const getStatus = (guest) => {
     const issues = [];
 
@@ -92,18 +135,6 @@ const GuestList = () => {
     };
   };
 
-  const handleDeleteGuest = async (guestToken) => {
-    if (!window.confirm('Are you sure you want to delete this guest?')) return;
-    try {
-      await axios.delete(
-        `${process.env.REACT_APP_BACKEND_URL}/api/guests/${guestToken}`
-      );
-      fetchGuests();
-    } catch {
-      setError('Failed to delete guest');
-    }
-  };
-
   if (loading) return <p>Loading guests...</p>;
 
   return (
@@ -121,24 +152,25 @@ const GuestList = () => {
         </button>
       </form>
       {error && <p style={{ color: 'red' }}>{error}</p>}
+
       <table border={1} cellPadding={5} cellSpacing={0}>
         <thead>
           <tr>
             <th>Name</th>
             <th>Guest Token (Link)</th>
             <th>Menu</th>
-            <th>Appetiser</th> {/* New column */}
+            <th>Appetiser</th>
             <th>Steak Cook</th>
             <th>Allergies</th>
             <th>Seat Name</th>
-            <th>Actions</th>
-            <th>Status</th> {/* 👈 New column */}
+            <th>Status</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
           {guests.length === 0 ? (
             <tr>
-              <td colSpan={8}>No guests found.</td> {/* update colspan */}
+              <td colSpan={9}>No guests found.</td>
             </tr>
           ) : (
             guests.map((g) => {
@@ -172,16 +204,13 @@ const GuestList = () => {
                     {status.text}
                   </td>
                   <td>
-                    <button
-                      onClick={() => handleDeleteGuest(g.guestToken)}
-                      style={{
-                        backgroundColor: 'red',
-                        color: 'white',
-                        cursor: 'pointer',
-                      }}
+                    <select
+                      onChange={(e) => handleGuestAction(e.target.value, g)}
                     >
-                      Delete
-                    </button>
+                      <option value="">-- Select --</option>
+                      <option value="update">Update Name</option>
+                      <option value="delete">Delete</option>
+                    </select>
                   </td>
                 </tr>
               );
@@ -189,6 +218,50 @@ const GuestList = () => {
           )}
         </tbody>
       </table>
+
+      {/* Modal for updating name */}
+      {selectedGuestForEdit && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <div
+            style={{
+              background: '#fefae0', // your requested background color
+              padding: 20,
+              borderRadius: 10,
+              color: 'black', // text color black
+            }}
+          >
+            <h3>Update Guest Name</h3>
+            <input
+              type="text"
+              value={updatedName}
+              onChange={(e) => setUpdatedName(e.target.value)}
+              placeholder="New name"
+              style={{ color: 'black' }} // ensure input text is black as well
+            />
+            <div style={{ marginTop: 10 }}>
+              <button onClick={handleUpdateGuestName}>Update</button>
+              <button
+                onClick={() => setSelectedGuestForEdit(null)}
+                style={{ marginLeft: 10 }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
