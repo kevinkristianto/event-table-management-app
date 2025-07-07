@@ -29,6 +29,12 @@ const GuestMenuConfirmation = () => {
         >
           Edit
         </button>
+        <button
+          className="back-to-guestlist-button"
+          onClick={() => navigate(`/admin/guests`)} // Navigate back to Guest List
+        >
+          Back to Guest List
+        </button>
         <h5>
           <i>Please note that menu can only be editted until 15/09/2025</i>
         </h5>
