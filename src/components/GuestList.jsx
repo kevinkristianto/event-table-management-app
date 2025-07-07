@@ -121,7 +121,7 @@ const GuestList = () => {
                 <td>{g.name || 'N/A'}</td>
                 <td>
                   {g.guestToken ? (
-                    <Link to={`/guest/${g.guestToken}`}>
+                    <Link to={`/guest/menu-selection/${g.guestToken}`}>
                       {g.guestToken.slice(0, 8)}...
                     </Link>
                   ) : (
