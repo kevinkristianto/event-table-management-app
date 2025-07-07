@@ -16,6 +16,15 @@
   text-align: center;
 }
 
+.guest-container {
+  max-width: 75vw;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
 .guest-input {
   width: 100%;
   padding: 10px;
@@ -231,4 +240,11 @@
   cursor: pointer;
   width: 100%;
   transition: background-color 0.3s ease;
+}
+
+.guest-subtitle {
+  color: #fefae0;
+  font-weight: 500;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
 }

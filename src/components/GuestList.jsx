@@ -68,6 +68,30 @@ const GuestList = () => {
     }
   };
 
+  const getStatus = (guest) => {
+    const issues = [];
+
+    if (!guest.menu || guest.menu === 'Not selected') {
+      issues.push('Menu');
+    }
+
+    if (!guest.appetiser || guest.appetiser === 'N/A') {
+      issues.push('Appetiser');
+    }
+
+    const seatName = getSeatNameForGuest(guest.name);
+    if (!seatName || seatName === 'N/A') {
+      issues.push('Seat Name');
+    }
+
+    if (issues.length === 0) return { text: 'All good', color: 'green' };
+
+    return {
+      text: `${issues.join(' and ')} not selected`,
+      color: 'orange',
+    };
+  };
+
   const handleDeleteGuest = async (guestToken) => {
     if (!window.confirm('Are you sure you want to delete this guest?')) return;
     try {
@@ -108,6 +132,7 @@ const GuestList = () => {
             <th>Allergies</th>
             <th>Seat Name</th>
             <th>Actions</th>
+            <th>Status</th> {/* 👈 New column */}
           </tr>
         </thead>
         <tbody>
@@ -116,39 +141,51 @@ const GuestList = () => {
               <td colSpan={8}>No guests found.</td> {/* update colspan */}
             </tr>
           ) : (
-            guests.map((g) => (
-              <tr key={g.guestToken || g.id}>
-                <td>{g.name || 'N/A'}</td>
-                <td>
-                  {g.guestToken ? (
-                    <Link to={`/guest/menu-selection/${g.guestToken}`}>
-                      {g.guestToken.slice(0, 8)}...
-                    </Link>
-                  ) : (
-                    'No token'
-                  )}
-                </td>
-                <td>{g.menu || 'Not selected'}</td>
-                <td>{g.appetiser || 'N/A'}</td> {/* Display appetiser */}
-                <td>{g.steakCook || 'N/A'}</td>
-                <td>
-                  {Array.isArray(g.allergies) ? g.allergies.join(', ') : ''}
-                </td>
-                <td>{getSeatNameForGuest(g.name)}</td>
-                <td>
-                  <button
-                    onClick={() => handleDeleteGuest(g.guestToken)}
+            guests.map((g) => {
+              const status = getStatus(g);
+              return (
+                <tr key={g.guestToken || g.id}>
+                  <td>{g.name || 'N/A'}</td>
+                  <td>
+                    {g.guestToken ? (
+                      <Link to={`/guest/menu-selection/${g.guestToken}`}>
+                        {g.guestToken.slice(0, 8)}...
+                      </Link>
+                    ) : (
+                      'No token'
+                    )}
+                  </td>
+                  <td>{g.menu || 'Not selected'}</td>
+                  <td>{g.appetiser || 'N/A'}</td>
+                  <td>{g.steakCook || 'N/A'}</td>
+                  <td>
+                    {Array.isArray(g.allergies) ? g.allergies.join(', ') : ''}
+                  </td>
+                  <td>{getSeatNameForGuest(g.name)}</td>
+                  <td
                     style={{
-                      backgroundColor: 'red',
+                      backgroundColor: status.color,
                       color: 'white',
-                      cursor: 'pointer',
+                      fontWeight: 'bold',
                     }}
                   >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))
+                    {status.text}
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => handleDeleteGuest(g.guestToken)}
+                      style={{
+                        backgroundColor: 'red',
+                        color: 'white',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>
