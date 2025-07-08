@@ -14,11 +14,13 @@ const ViewMode = () => {
     x: 0,
     y: 0,
     guest: '',
+    appetiser: '',
     menu: '',
+    wineSelection: '',
     allergies: [],
   });
 
-  const layoutName = 'kevin-cia-lobo'; // Replace with dynamic layout name if needed
+  const layoutName = 'kevin-cia-lobo';
 
   useEffect(() => {
     const fetchLayout = async () => {
@@ -56,10 +58,8 @@ const ViewMode = () => {
       return;
     }
 
-    // Find guest details from the fetched guests list
     const guestDetails = guests.find((guest) => guest.name === el.guest);
 
-    // Format menu with steak cook if applicable
     let formattedMenu = guestDetails?.menu || 'No menu selected';
     if (formattedMenu === 'Grilled Ribeye' && guestDetails?.steakCook) {
       formattedMenu = `${formattedMenu} - ${guestDetails.steakCook}`;
@@ -70,7 +70,9 @@ const ViewMode = () => {
       x: el.x * zoomLevel + contentPosition.x,
       y: el.y * zoomLevel + contentPosition.y,
       guest: el.guest,
+      appetiser: guestDetails?.appetiser || 'N/A',
       menu: formattedMenu,
+      wineSelection: guestDetails?.wineSelection || 'N/A',
       allergies: guestDetails?.allergies || [],
     });
   };
@@ -81,7 +83,9 @@ const ViewMode = () => {
       x: 0,
       y: 0,
       guest: '',
+      appetiser: '',
       menu: '',
+      wineSelection: '',
       allergies: [],
     });
   };
@@ -95,55 +99,67 @@ const ViewMode = () => {
         onTransformChange={handleTransformChange}
       >
         {Array.isArray(layout) &&
-          layout.map((el) => (
-            <div
-              key={el.id}
-              className={`element ${el.type} ${el.guest ? 'assigned' : ''}`}
-              style={{
-                left: `${el.x * zoomLevel + contentPosition.x}px`,
-                top: `${el.y * zoomLevel + contentPosition.y}px`,
-                width: `${el.width * zoomLevel}px`,
-                height: `${el.height * zoomLevel}px`,
-                position: 'absolute',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                textAlign: 'center',
-                overflow: 'hidden',
-                padding: '5px',
-                boxSizing: 'border-box',
-                transform: `rotate(${el.rotation || 0}deg)`,
-                transformOrigin: 'center center',
-              }}
-              onClick={() => el.type === 'chair' && handleChairClick(el)}
-            >
-              {/* Seat Label */}
-              {el.type === 'others' ? (
-                <span className="others-label">{el.name}</span>
-              ) : (
-                <span className="seat-label">{el.name}</span>
-              )}
+          layout.map((el) => {
+            // Find guest details for this element’s guest
+            const guestDetails = guests.find(
+              (guest) => guest.name === el.guest
+            );
 
-              {/* Guest Name */}
-              {el.guest && (
-                <div
-                  className="guest-name"
-                  style={{
-                    fontSize: `${4 * zoomLevel}px`,
-                  }}
-                >
-                  {el.guest.split(' ').map((part, index) => (
-                    <span key={index} className="guest-name-part">
-                      {part}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+            // Check if wineSelection is red or white wine
+            const isRedOrWhiteWine =
+              guestDetails &&
+              guestDetails.wineSelection &&
+              ['red wine', 'white wine'].includes(
+                guestDetails.wineSelection.toLowerCase()
+              );
 
-        {/* Bubble Information */}
+            return (
+              <div
+                key={el.id}
+                className={`element ${el.type} ${el.guest ? 'assigned' : ''}`}
+                style={{
+                  left: `${el.x * zoomLevel + contentPosition.x}px`,
+                  top: `${el.y * zoomLevel + contentPosition.y}px`,
+                  width: `${el.width * zoomLevel}px`,
+                  height: `${el.height * zoomLevel}px`,
+                  position: 'absolute',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  overflow: 'hidden',
+                  padding: '5px',
+                  boxSizing: 'border-box',
+                  transform: `rotate(${el.rotation || 0}deg)`,
+                  transformOrigin: 'center center',
+                  backgroundColor: isRedOrWhiteWine ? '#f8d7da' : 'transparent',
+                }}
+                onClick={() => el.type === 'chair' && handleChairClick(el)}
+              >
+                {el.type === 'others' ? (
+                  <span className="others-label">{el.name}</span>
+                ) : (
+                  <span className="seat-label">{el.name}</span>
+                )}
+
+                {el.guest && (
+                  <div
+                    className="guest-name"
+                    style={{ fontSize: `${4 * zoomLevel}px` }}
+                  >
+                    {el.guest.split(' ').map((part, i) => (
+                      <span key={i} className="guest-name-part">
+                        {part}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+        {/* Bubble Info */}
         {bubbleInfo.visible && (
           <div
             className="info-bubble"
@@ -157,14 +173,20 @@ const ViewMode = () => {
               padding: '10px',
               boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
               zIndex: 1000,
-              width: '200px',
+              width: '220px',
             }}
           >
             <p>
               <strong>Name:</strong> {bubbleInfo.guest}
             </p>
             <p>
-              <strong>Menu:</strong> {bubbleInfo.menu}
+              <strong>Appetiser:</strong> {bubbleInfo.appetiser}
+            </p>
+            <p>
+              <strong>Main Course:</strong> {bubbleInfo.menu}
+            </p>
+            <p>
+              <strong>Wine Selection:</strong> {bubbleInfo.wineSelection}
             </p>
             <p>
               <strong>Allergies:</strong>{' '}

@@ -10,6 +10,7 @@ const GuestList = () => {
   const [loading, setLoading] = useState(true);
   const [selectedGuestForEdit, setSelectedGuestForEdit] = useState(null);
   const [updatedName, setUpdatedName] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc'); // asc or desc
 
   const layoutName = 'kevin-cia-lobo';
 
@@ -101,6 +102,7 @@ const GuestList = () => {
           appetiser: selectedGuestForEdit.appetiser || '',
           allergies: selectedGuestForEdit.allergies || [],
           steakCook: selectedGuestForEdit.steakCook || null,
+          wineSelection: selectedGuestForEdit.wineSelection || 'None',
         }
       );
       setSelectedGuestForEdit(null);
@@ -135,6 +137,20 @@ const GuestList = () => {
     };
   };
 
+  // Sorting guests by name depending on sortOrder
+  const sortedGuests = [...guests].sort((a, b) => {
+    const nameA = (a.name || '').toLowerCase();
+    const nameB = (b.name || '').toLowerCase();
+
+    if (nameA < nameB) return sortOrder === 'asc' ? -1 : 1;
+    if (nameA > nameB) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const toggleSortOrder = () => {
+    setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+  };
+
   if (loading) return <p>Loading guests...</p>;
 
   return (
@@ -156,11 +172,18 @@ const GuestList = () => {
       <table border={1} cellPadding={5} cellSpacing={0}>
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Guest Token (Link)</th>
-            <th>Menu</th>
+            <th
+              style={{ cursor: 'pointer' }}
+              onClick={toggleSortOrder}
+              title="Sort by Name"
+            >
+              Name {sortOrder === 'asc' ? '▲' : '▼'}
+            </th>
+            <th>Token</th>
             <th>Appetiser</th>
+            <th>Menu</th>
             <th>Steak Cook</th>
+            <th>Wine Selection</th>
             <th>Allergies</th>
             <th>Seat Name</th>
             <th>Status</th>
@@ -168,12 +191,12 @@ const GuestList = () => {
           </tr>
         </thead>
         <tbody>
-          {guests.length === 0 ? (
+          {sortedGuests.length === 0 ? (
             <tr>
-              <td colSpan={9}>No guests found.</td>
+              <td colSpan={10}>No guests found.</td>
             </tr>
           ) : (
-            guests.map((g) => {
+            sortedGuests.map((g) => {
               const status = getStatus(g);
               return (
                 <tr key={g.guestToken || g.id}>
@@ -187,9 +210,20 @@ const GuestList = () => {
                       'No token'
                     )}
                   </td>
-                  <td>{g.menu || 'Not selected'}</td>
                   <td>{g.appetiser || 'N/A'}</td>
+                  <td>{g.menu || 'Not selected'}</td>
                   <td>{g.steakCook || 'N/A'}</td>
+                  <td
+                    style={{
+                      backgroundColor:
+                        g.wineSelection === 'Red Wine' ||
+                        g.wineSelection === 'White Wine'
+                          ? '#f8d7da'
+                          : 'transparent',
+                    }}
+                  >
+                    {g.wineSelection || 'None'}
+                  </td>{' '}
                   <td>
                     {Array.isArray(g.allergies) ? g.allergies.join(', ') : ''}
                   </td>
@@ -206,6 +240,7 @@ const GuestList = () => {
                   <td>
                     <select
                       onChange={(e) => handleGuestAction(e.target.value, g)}
+                      defaultValue=""
                     >
                       <option value="">-- Select --</option>
                       <option value="update">Update Name</option>
@@ -236,10 +271,10 @@ const GuestList = () => {
         >
           <div
             style={{
-              background: '#fefae0', // your requested background color
+              background: '#fefae0',
               padding: 20,
               borderRadius: 10,
-              color: 'black', // text color black
+              color: 'black',
             }}
           >
             <h3>Update Guest Name</h3>
@@ -248,7 +283,7 @@ const GuestList = () => {
               value={updatedName}
               onChange={(e) => setUpdatedName(e.target.value)}
               placeholder="New name"
-              style={{ color: 'black' }} // ensure input text is black as well
+              style={{ color: 'black' }}
             />
             <div style={{ marginTop: 10 }}>
               <button onClick={handleUpdateGuestName}>Update</button>

@@ -12,6 +12,8 @@ const allergiesList = [
   'Vegan',
 ];
 
+const wineList = ['Red Wine', 'White Wine'];
+
 const GuestForm = () => {
   const { guestToken } = useParams();
   const navigate = useNavigate();
@@ -21,6 +23,7 @@ const GuestForm = () => {
   const [menuSelection, setMenuSelection] = useState('');
   const [steakCook, setSteakCook] = useState('');
   const [allergies, setAllergies] = useState([]);
+  const [wineSelection, setWineSelection] = useState('');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -73,6 +76,7 @@ const GuestForm = () => {
         }
 
         setAllergies(res.data.allergies || []);
+        setWineSelection(res.data.wineSelection || '');
       })
       .catch(() => {
         setMessage('Guest not found or invalid link.');
@@ -133,6 +137,7 @@ const GuestForm = () => {
         appetiser: menuType === 'Standard' ? appetiser : null,
         allergies,
         steakCook: menuSelection === 'Grilled Ribeye' ? steakCook : null,
+        wineSelection: wineSelection || 'None',
       };
 
       await axios.put(
@@ -149,6 +154,7 @@ const GuestForm = () => {
               'Steak Cooking Level': steakCook,
             }),
             Allergies: allergies.length > 0 ? allergies.join(', ') : 'None',
+            wineSelection: wineSelection || 'None',
           },
           guestToken,
         },
@@ -293,22 +299,53 @@ const GuestForm = () => {
         )}
 
         {menuType && menuSelection && (
-          <div style={{ marginTop: 20 }}>
-            <label className="guest-select-label">
-              Please select any food allergies or dietary requirements:
-            </label>
-            <br />
-            {allergiesList.map((allergy) => (
-              <label key={allergy} className="guest-checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={allergies.includes(allergy)}
-                  onChange={() => handleAllergyChange(allergy)}
-                />{' '}
-                {allergy}
+          <>
+            <div style={{ marginTop: 20 }}>
+              <label className="guest-select-label">
+                Please select any food allergies or dietary requirements:
               </label>
-            ))}
-          </div>
+              <br />
+              {allergiesList.map((allergy) => (
+                <label key={allergy} className="guest-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={allergies.includes(allergy)}
+                    onChange={() => handleAllergyChange(allergy)}
+                  />{' '}
+                  {allergy}
+                </label>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 20 }}>
+              <label className="guest-select-label">
+                Please select your wine preference:
+              </label>
+              <br />
+              {wineList.map((wine) => (
+                <label key={wine} className="guest-radio-label">
+                  <input
+                    type="radio"
+                    name="wine"
+                    value={wine}
+                    checked={wineSelection === wine}
+                    onChange={() => setWineSelection(wine)}
+                  />{' '}
+                  {wine}
+                </label>
+              ))}
+              <label className="guest-radio-label">
+                <input
+                  type="radio"
+                  name="wine"
+                  value="None"
+                  checked={wineSelection === 'None' || wineSelection === ''}
+                  onChange={() => setWineSelection('None')}
+                />{' '}
+                None
+              </label>
+            </div>
+          </>
         )}
 
         <button type="submit" className="guest-submit-button">
