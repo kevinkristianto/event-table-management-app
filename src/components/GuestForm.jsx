@@ -5,11 +5,19 @@ import './GuestStyles.css';
 
 const allergiesList = [
   'Gluten',
+  'Crustaceans',
+  'Eggs',
+  'Fish',
   'Peanuts',
-  'Dairy',
-  'Shellfish',
-  'Vegetarian',
-  'Vegan',
+  'Soybeans',
+  'Milk',
+  'Tree Nuts',
+  'Celery',
+  'Mustard',
+  'Sesame',
+  'Sulphites',
+  'Lupin',
+  'Molluscs',
 ];
 
 const wineList = ['Red Wine', 'White Wine'];

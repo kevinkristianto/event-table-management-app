@@ -4,101 +4,153 @@ import './CanvasWrapper.css';
 const CanvasWrapper = ({ children, onTransformChange }) => {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [contentPosition, setContentPosition] = useState({ x: 0, y: 0 });
+  const zoomLevelRef = useRef(zoomLevel);
+  const contentPositionRef = useRef(contentPosition);
+
   const [isPanning, setIsPanning] = useState(false);
   const [startPan, setStartPan] = useState({ x: 0, y: 0 });
   const [isTouching, setIsTouching] = useState(false);
   const [lastTouch, setLastTouch] = useState(null);
+  const [lastPinchDistance, setLastPinchDistance] = useState(null);
+
   const contentRef = useRef(null);
+  const lastTouchMoveUpdate = useRef(Date.now());
 
   useEffect(() => {
+    contentPositionRef.current = contentPosition;
+    zoomLevelRef.current = zoomLevel;
     if (onTransformChange) {
       onTransformChange({ zoomLevel, contentPosition });
     }
   }, [zoomLevel, contentPosition, onTransformChange]);
 
-  // Allow panning to start anywhere, but only trigger click if no movement
-  const [mouseMoved, setMouseMoved] = useState(false);
+  const applyTransformDirectly = (pos, zoom) => {
+    if (contentRef.current) {
+      contentRef.current.style.transform = `translate(${pos.x}px, ${pos.y}px) scale(${zoom})`;
+    }
+  };
+
   const handleMouseDown = (e) => {
     setIsPanning(true);
     setStartPan({
-      x: e.clientX - contentPosition.x,
-      y: e.clientY - contentPosition.y,
+      x: e.clientX - contentPositionRef.current.x,
+      y: e.clientY - contentPositionRef.current.y,
     });
-    setMouseMoved(false);
   };
 
   const handleMouseMove = (e) => {
     if (!isPanning) return;
-    setMouseMoved(true);
-    const newX = e.clientX - startPan.x;
-    const newY = e.clientY - startPan.y;
-    setContentPosition({ x: newX, y: newY });
+    const newPos = {
+      x: e.clientX - startPan.x,
+      y: e.clientY - startPan.y,
+    };
+    contentPositionRef.current = newPos;
+    setContentPosition(newPos);
   };
 
-  const handleMouseUp = () => {
-    setIsPanning(false);
-    setMouseMoved(false);
-  };
+  const handleMouseUp = () => setIsPanning(false);
 
   const handleWheel = (e) => {
     e.preventDefault();
-    e.stopPropagation();
-    const zoomChange = e.deltaY > 0 ? -0.01 : 0.01;
-    setZoomLevel((prev) => Math.min(Math.max(prev + zoomChange, 0.5), 2));
+    const ZOOM_SENSITIVITY = 0.0015;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    const prevZoom = zoomLevelRef.current;
+    const zoomFactor = 1 - e.deltaY * ZOOM_SENSITIVITY;
+    const newZoom = Math.min(Math.max(prevZoom * zoomFactor, 0.5), 2);
+    const scale = newZoom / prevZoom;
+
+    const prevPos = contentPositionRef.current;
+    const newPos = {
+      x: mouseX - (mouseX - prevPos.x) * scale,
+      y: mouseY - (mouseY - prevPos.y) * scale,
+    };
+
+    contentPositionRef.current = newPos;
+    zoomLevelRef.current = newZoom;
+
+    applyTransformDirectly(newPos, newZoom);
+    setContentPosition(newPos);
+    setZoomLevel(newZoom);
   };
 
-  // For pinch zoom
-  const [lastPinchDistance, setLastPinchDistance] = useState(null);
-
   const getTouchDistance = (touches) => {
-    if (touches.length < 2) return 0;
     const dx = touches[0].clientX - touches[1].clientX;
     const dy = touches[0].clientY - touches[1].clientY;
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  // Touch: allow panning/zooming anywhere, but only trigger click if no movement
-  const [touchMoved, setTouchMoved] = useState(false);
+  const getTouchMidpoint = (touches) => ({
+    x: (touches[0].clientX + touches[1].clientX) / 2,
+    y: (touches[0].clientY + touches[1].clientY) / 2,
+  });
+
   const handleTouchStart = (e) => {
     if (e.touches.length === 1) {
       setIsTouching(true);
       setLastTouch({ x: e.touches[0].clientX, y: e.touches[0].clientY });
       setLastPinchDistance(null);
-      setTouchMoved(false);
     } else if (e.touches.length === 2) {
       setIsTouching(false);
       setLastTouch(null);
       setLastPinchDistance(getTouchDistance(e.touches));
-      setTouchMoved(false);
     }
   };
 
   const handleTouchMove = (e) => {
     if (e.touches.length === 2 && lastPinchDistance !== null) {
-      // Pinch zoom
       const newDistance = getTouchDistance(e.touches);
-      const delta = newDistance - lastPinchDistance;
-      if (Math.abs(delta) > 2) {
-        // threshold to avoid jitter
-        setZoomLevel((prev) => {
-          let next = prev + delta * 0.003; // adjust sensitivity as needed
-          next = Math.min(Math.max(next, 0.5), 2);
-          return next;
-        });
-        setLastPinchDistance(newDistance);
+      const midpoint = getTouchMidpoint(e.touches);
+      const rect = contentRef.current.parentElement.getBoundingClientRect();
+
+      const centerX = midpoint.x - rect.left;
+      const centerY = midpoint.y - rect.top;
+
+      const prevZoom = zoomLevelRef.current;
+      const scale = newDistance / lastPinchDistance;
+      const newZoom = Math.min(Math.max(prevZoom * scale, 0.5), 2);
+      const scaleChange = newZoom / prevZoom;
+
+      const prevPos = contentPositionRef.current;
+      const newPos = {
+        x: centerX - (centerX - prevPos.x) * scaleChange,
+        y: centerY - (centerY - prevPos.y) * scaleChange,
+      };
+
+      contentPositionRef.current = newPos;
+      zoomLevelRef.current = newZoom;
+
+      applyTransformDirectly(newPos, newZoom);
+
+      if (Date.now() - lastTouchMoveUpdate.current > 50) {
+        setContentPosition(newPos);
+        setZoomLevel(newZoom);
+        lastTouchMoveUpdate.current = Date.now();
       }
-      setTouchMoved(true);
+
+      setLastPinchDistance(newDistance);
       e.preventDefault();
     } else if (isTouching && e.touches.length === 1 && lastTouch) {
-      // Panning
       const deltaX = e.touches[0].clientX - lastTouch.x;
       const deltaY = e.touches[0].clientY - lastTouch.y;
-      setContentPosition((prev) => ({
-        x: prev.x + deltaX,
-        y: prev.y + deltaY,
-      }));
+
+      const prevPos = contentPositionRef.current;
+      const newPos = {
+        x: prevPos.x + deltaX,
+        y: prevPos.y + deltaY,
+      };
+
+      contentPositionRef.current = newPos;
+      applyTransformDirectly(newPos, zoomLevelRef.current);
+
+      if (Date.now() - lastTouchMoveUpdate.current > 50) {
+        setContentPosition(newPos);
+        lastTouchMoveUpdate.current = Date.now();
+      }
+
       setLastTouch({ x: e.touches[0].clientX, y: e.touches[0].clientY });
-      setTouchMoved(true);
       e.preventDefault();
     }
   };
@@ -108,12 +160,10 @@ const CanvasWrapper = ({ children, onTransformChange }) => {
       setIsTouching(false);
       setLastTouch(null);
       setLastPinchDistance(null);
-      setTouchMoved(false);
     } else if (e.touches.length === 1) {
       setIsTouching(true);
       setLastTouch({ x: e.touches[0].clientX, y: e.touches[0].clientY });
       setLastPinchDistance(null);
-      setTouchMoved(false);
     }
   };
 
@@ -135,7 +185,12 @@ const CanvasWrapper = ({ children, onTransformChange }) => {
         ref={contentRef}
         style={{
           transform: `translate(${contentPosition.x}px, ${contentPosition.y}px) scale(${zoomLevel})`,
-          transformOrigin: '0 0',
+          transformOrigin: 'top left',
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: '100%',
+          height: '100%',
         }}
       >
         {children}
