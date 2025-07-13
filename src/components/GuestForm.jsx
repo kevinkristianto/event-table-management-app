@@ -47,35 +47,27 @@ const GuestForm = () => {
         const savedMenu = res.data.menu || '';
         if (savedMenu === 'Standard' || savedMenu === 'Vegan') {
           setMenuType(savedMenu);
-          setMenuSelection('');
+          setMenuSelection(savedMenu === 'Vegan' ? 'Aubergine Schnitzels' : '');
           setSteakCook('');
-          if (savedMenu === 'Standard') {
-            setAppetiser('Beef Carpaccio');
-          } else {
-            setAppetiser('');
-          }
+          setAppetiser(savedMenu === 'Standard' ? 'Beef Carpaccio' : '');
         } else if (
           [
             'Salmon al Forno',
             'Grilled Ribeye',
             'Aubergine Schnitzels',
-            'Roasted Cauliflower',
           ].includes(savedMenu)
         ) {
           const inferredType = [
             'Aubergine Schnitzels',
-            'Roasted Cauliflower',
           ].includes(savedMenu)
             ? 'Vegan'
             : 'Standard';
           setMenuType(inferredType);
-          setMenuSelection(savedMenu);
+          setMenuSelection(
+            inferredType === 'Vegan' ? 'Aubergine Schnitzels' : savedMenu
+          );
           setSteakCook(res.data.steakCook || '');
-          if (inferredType === 'Standard') {
-            setAppetiser('Beef Carpaccio');
-          } else {
-            setAppetiser('');
-          }
+          setAppetiser(inferredType === 'Standard' ? 'Beef Carpaccio' : '');
         } else {
           setMenuType('');
           setMenuSelection('');
@@ -101,12 +93,13 @@ const GuestForm = () => {
 
   const handleMenuTypeChange = (type) => {
     setMenuType(type);
-    setMenuSelection('');
     setSteakCook('');
     if (type === 'Standard') {
       setAppetiser('Beef Carpaccio');
+      setMenuSelection('');
     } else {
       setAppetiser('');
+      setMenuSelection('Aubergine Schnitzels');
     }
   };
 
@@ -116,61 +109,62 @@ const GuestForm = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage('');
+  e.preventDefault();
+  setMessage('');
 
-    if (!menuType) {
-      setMessage('Please select a menu type.');
-      return;
-    }
+  if (!menuType) {
+    setMessage('Please select a menu type.');
+    return;
+  }
 
-    if (menuType === 'Standard' && !appetiser) {
-      setMessage('Please select an appetiser.');
-      return;
-    }
+  if (menuType === 'Standard' && !appetiser) {
+    setMessage('Please select an appetiser.');
+    return;
+  }
 
-    if (!menuSelection) {
-      setMessage('Please select a main course.');
-      return;
-    }
+  if (!menuSelection && menuType !== 'Vegan') {
+    setMessage('Please select a main course.');
+    return;
+  }
 
-    if (menuSelection === 'Grilled Ribeye' && !steakCook) {
-      setMessage('Please select how you want your steak cooked.');
-      return;
-    }
+  if (menuSelection === 'Grilled Ribeye' && !steakCook) {
+    setMessage('Please select how you want your steak cooked.');
+    return;
+  }
 
-    try {
-      const updateData = {
-        menu: menuSelection || menuType,
-        appetiser: menuType === 'Standard' ? appetiser : null,
-        allergies,
-        steakCook: menuSelection === 'Grilled Ribeye' ? steakCook : null,
-        wineSelection: wineSelection || 'None',
-      };
+  try {
+    const updateData = {
+      menu: menuSelection || menuType,
+      appetiser: menuType === 'Standard' ? appetiser : 'Tuscan Panzanella Salad',
+      allergies,
+      steakCook: menuSelection === 'Grilled Ribeye' ? steakCook : null,
+      wineSelection: wineSelection || 'None',
+    };
 
-      await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/api/guests/${guestToken}`,
-        updateData
-      );
+    await axios.put(
+      `${process.env.REACT_APP_BACKEND_URL}/api/guests/${guestToken}`,
+      updateData
+    );
 
-      navigate(`/guest/menu-confirmation/${guestToken}`, {
-        state: {
-          selection: {
-            Appetiser: menuType === 'Standard' ? appetiser : 'N/A',
-            'Menu Selected': menuSelection || menuType,
-            ...(menuSelection === 'Grilled Ribeye' && {
-              'Steak Cooking Level': steakCook,
-            }),
-            Allergies: allergies.length > 0 ? allergies.join(', ') : 'None',
-            wineSelection: wineSelection || 'None',
-          },
-          guestToken,
+    navigate(`/guest/menu-confirmation/${guestToken}`, {
+      state: {
+        selection: {
+          Appetiser: menuType === 'Standard' ? appetiser : 'Tuscan Panzanella Salad',
+          'Menu Selected': menuSelection || menuType,
+          ...(menuSelection === 'Grilled Ribeye' && {
+            'Steak Cooking Level': steakCook,
+          }),
+          Allergies: allergies.length > 0 ? allergies.join(', ') : 'None',
+          'Wine Selection': wineSelection || 'None',
         },
-      });
-    } catch {
-      setMessage('Failed to save your selections, please try again.');
-    }
-  };
+        guestToken,
+      },
+    });
+  } catch {
+    setMessage('Failed to save your selections, please try again.');
+  }
+};
+
 
   if (!guest) {
     return (
@@ -259,19 +253,13 @@ const GuestForm = () => {
         {menuType === 'Vegan' && (
           <div style={{ marginTop: 20 }}>
             <label className="guest-select-label">
-              Please select your vegan main course:
+              Your appetiser will be:
             </label>
-            <br />
-            <select
-              value={menuSelection}
-              onChange={(e) => handleMenuSelectionChange(e.target.value)}
-              required
-              className="guest-select"
-            >
-              <option value="">-- Select --</option>
-              <option value="Aubergine Schnitzels">Aubergine Schnitzels</option>
-              <option value="Roasted Cauliflower">Roasted Cauliflower</option>
-            </select>
+            <p className="guest-fixed-selection">Tuscan Panzanella Salad</p>
+            <label className="guest-select-label">
+              Your main course will be:
+            </label>
+            <p className="guest-fixed-selection">Aubergine Schnitzels</p>
           </div>
         )}
 
