@@ -149,6 +149,7 @@ const AppWrapper = () => {
       )}
 
       <Routes>
+        <Route path="/" element={<Navigate to="/view" replace />} />
         {isAdmin && (
           <>
             <Route path="/admin/build" element={<BuildMode />} />

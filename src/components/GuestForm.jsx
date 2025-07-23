@@ -57,9 +57,7 @@ const GuestForm = () => {
             'Aubergine Schnitzels',
           ].includes(savedMenu)
         ) {
-          const inferredType = [
-            'Aubergine Schnitzels',
-          ].includes(savedMenu)
+          const inferredType = ['Aubergine Schnitzels'].includes(savedMenu)
             ? 'Vegan'
             : 'Standard';
           setMenuType(inferredType);
@@ -109,62 +107,63 @@ const GuestForm = () => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setMessage('');
+    e.preventDefault();
+    setMessage('');
 
-  if (!menuType) {
-    setMessage('Please select a menu type.');
-    return;
-  }
+    if (!menuType) {
+      setMessage('Please select a menu type.');
+      return;
+    }
 
-  if (menuType === 'Standard' && !appetiser) {
-    setMessage('Please select an appetiser.');
-    return;
-  }
+    if (menuType === 'Standard' && !appetiser) {
+      setMessage('Please select an appetiser.');
+      return;
+    }
 
-  if (!menuSelection && menuType !== 'Vegan') {
-    setMessage('Please select a main course.');
-    return;
-  }
+    if (!menuSelection && menuType !== 'Vegan') {
+      setMessage('Please select a main course.');
+      return;
+    }
 
-  if (menuSelection === 'Grilled Ribeye' && !steakCook) {
-    setMessage('Please select how you want your steak cooked.');
-    return;
-  }
+    if (menuSelection === 'Grilled Ribeye' && !steakCook) {
+      setMessage('Please select how you want your steak cooked.');
+      return;
+    }
 
-  try {
-    const updateData = {
-      menu: menuSelection || menuType,
-      appetiser: menuType === 'Standard' ? appetiser : 'Tuscan Panzanella Salad',
-      allergies,
-      steakCook: menuSelection === 'Grilled Ribeye' ? steakCook : null,
-      wineSelection: wineSelection || 'None',
-    };
+    try {
+      const updateData = {
+        menu: menuSelection || menuType,
+        appetiser:
+          menuType === 'Standard' ? appetiser : 'Tuscan Panzanella Salad',
+        allergies,
+        steakCook: menuSelection === 'Grilled Ribeye' ? steakCook : null,
+        wineSelection: wineSelection || 'None',
+      };
 
-    await axios.put(
-      `${process.env.REACT_APP_BACKEND_URL}/api/guests/${guestToken}`,
-      updateData
-    );
+      await axios.put(
+        `${process.env.REACT_APP_BACKEND_URL}/api/guests/${guestToken}`,
+        updateData
+      );
 
-    navigate(`/guest/menu-confirmation/${guestToken}`, {
-      state: {
-        selection: {
-          Appetiser: menuType === 'Standard' ? appetiser : 'Tuscan Panzanella Salad',
-          'Menu Selected': menuSelection || menuType,
-          ...(menuSelection === 'Grilled Ribeye' && {
-            'Steak Cooking Level': steakCook,
-          }),
-          Allergies: allergies.length > 0 ? allergies.join(', ') : 'None',
-          'Wine Selection': wineSelection || 'None',
+      navigate(`/guest/menu-confirmation/${guestToken}`, {
+        state: {
+          selection: {
+            Appetiser:
+              menuType === 'Standard' ? appetiser : 'Tuscan Panzanella Salad',
+            'Menu Selected': menuSelection || menuType,
+            ...(menuSelection === 'Grilled Ribeye' && {
+              'Steak Cooking Level': steakCook,
+            }),
+            Allergies: allergies.length > 0 ? allergies.join(', ') : 'None',
+            'Wine Selection': wineSelection || 'None',
+          },
+          guestToken,
         },
-        guestToken,
-      },
-    });
-  } catch {
-    setMessage('Failed to save your selections, please try again.');
-  }
-};
-
+      });
+    } catch {
+      setMessage('Failed to save your selections, please try again.');
+    }
+  };
 
   if (!guest) {
     return (

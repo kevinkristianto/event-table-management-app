@@ -1,11 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './CanvasWrapper.css';
 
-const CanvasWrapper = ({ children, onTransformChange }) => {
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [contentPosition, setContentPosition] = useState({ x: 0, y: 0 });
-  const zoomLevelRef = useRef(zoomLevel);
+const CanvasWrapper = ({
+  children,
+  onTransformChange,
+  initialTransform,
+  interactionLocked,
+}) => {
+  const [zoomLevel, setZoomLevel] = useState(initialTransform?.zoomLevel || 1);
+  const [contentPosition, setContentPosition] = useState(
+    initialTransform?.contentPosition || { x: 0, y: 0 }
+  );
+
   const contentPositionRef = useRef(contentPosition);
+  const zoomLevelRef = useRef(zoomLevel);
 
   const [isPanning, setIsPanning] = useState(false);
   const [startPan, setStartPan] = useState({ x: 0, y: 0 });
@@ -24,6 +32,13 @@ const CanvasWrapper = ({ children, onTransformChange }) => {
     }
   }, [zoomLevel, contentPosition, onTransformChange]);
 
+  useEffect(() => {
+    if (initialTransform) {
+      setZoomLevel(initialTransform.zoomLevel || 1);
+      setContentPosition(initialTransform.contentPosition || { x: 0, y: 0 });
+    }
+  }, [initialTransform]);
+
   const applyTransformDirectly = (pos, zoom) => {
     if (contentRef.current) {
       contentRef.current.style.transform = `translate(${pos.x}px, ${pos.y}px) scale(${zoom})`;
@@ -31,6 +46,7 @@ const CanvasWrapper = ({ children, onTransformChange }) => {
   };
 
   const handleMouseDown = (e) => {
+    if (interactionLocked) return;
     setIsPanning(true);
     setStartPan({
       x: e.clientX - contentPositionRef.current.x,
@@ -39,7 +55,7 @@ const CanvasWrapper = ({ children, onTransformChange }) => {
   };
 
   const handleMouseMove = (e) => {
-    if (!isPanning) return;
+    if (interactionLocked || !isPanning) return;
     const newPos = {
       x: e.clientX - startPan.x,
       y: e.clientY - startPan.y,
@@ -48,10 +64,15 @@ const CanvasWrapper = ({ children, onTransformChange }) => {
     setContentPosition(newPos);
   };
 
-  const handleMouseUp = () => setIsPanning(false);
+  const handleMouseUp = () => {
+    if (interactionLocked) return;
+    setIsPanning(false);
+  };
 
   const handleWheel = (e) => {
+    if (interactionLocked) return;
     e.preventDefault();
+
     const ZOOM_SENSITIVITY = 0.0015;
     const rect = e.currentTarget.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
@@ -88,6 +109,8 @@ const CanvasWrapper = ({ children, onTransformChange }) => {
   });
 
   const handleTouchStart = (e) => {
+    if (interactionLocked) return;
+
     if (e.touches.length === 1) {
       setIsTouching(true);
       setLastTouch({ x: e.touches[0].clientX, y: e.touches[0].clientY });
@@ -100,6 +123,8 @@ const CanvasWrapper = ({ children, onTransformChange }) => {
   };
 
   const handleTouchMove = (e) => {
+    if (interactionLocked) return;
+
     if (e.touches.length === 2 && lastPinchDistance !== null) {
       const newDistance = getTouchDistance(e.touches);
       const midpoint = getTouchMidpoint(e.touches);
@@ -156,6 +181,8 @@ const CanvasWrapper = ({ children, onTransformChange }) => {
   };
 
   const handleTouchEnd = (e) => {
+    if (interactionLocked) return;
+
     if (e.touches.length === 0) {
       setIsTouching(false);
       setLastTouch(null);
@@ -178,7 +205,7 @@ const CanvasWrapper = ({ children, onTransformChange }) => {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      style={{ touchAction: 'none' }}
+      style={{ touchAction: 'none', userSelect: 'none' }}
     >
       <div
         className="canvas-content"
