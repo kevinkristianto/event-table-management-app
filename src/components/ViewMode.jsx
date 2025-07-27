@@ -4,7 +4,7 @@ import CanvasWrapper from './CanvasWrapper';
 import axios from 'axios';
 import { fetchLayoutByName } from '../services/layoutService';
 
-const ViewMode = () => {
+const ViewMode = ({ onLoadComplete }) => {
   const [layout, setLayout] = useState([]);
   const [guests, setGuests] = useState([]);
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -21,6 +21,9 @@ const ViewMode = () => {
   });
 
   const layoutName = 'kevin-cia-lobo';
+
+  // Track if onLoadComplete was already called to avoid multiple calls
+  const [hasCalledOnLoadComplete, setHasCalledOnLoadComplete] = useState(false);
 
   useEffect(() => {
     const fetchLayout = async () => {
@@ -46,6 +49,19 @@ const ViewMode = () => {
     fetchLayout();
     fetchGuests();
   }, [layoutName]);
+
+  // When both layout and guests are loaded, notify parent (only once)
+  useEffect(() => {
+    if (
+      !hasCalledOnLoadComplete &&
+      layout.length > 0 &&
+      guests.length > 0 &&
+      typeof onLoadComplete === 'function'
+    ) {
+      onLoadComplete();
+      setHasCalledOnLoadComplete(true);
+    }
+  }, [layout, guests, hasCalledOnLoadComplete, onLoadComplete]);
 
   const handleTransformChange = ({ zoomLevel, contentPosition }) => {
     setZoomLevel(zoomLevel);

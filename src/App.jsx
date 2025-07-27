@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -24,7 +24,26 @@ const AppWrapper = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [showSpinner, setShowSpinner] = useState(false);
   const navigate = useNavigate();
+  const spinnerTimeoutRef = useRef(null);
+
+  // Start spinner if / or /view takes more than 1 sec, only for non-admin & non-guest routes
+  useEffect(() => {
+    if (
+      !isAdmin &&
+      !isGuestRoute &&
+      (location.pathname === '/' || location.pathname === '/view')
+    ) {
+      spinnerTimeoutRef.current = setTimeout(() => {
+        setShowSpinner(true);
+      }, 1000);
+    } else {
+      clearTimeout(spinnerTimeoutRef.current);
+      setShowSpinner(false);
+    }
+    return () => clearTimeout(spinnerTimeoutRef.current);
+  }, [location.pathname, isAdmin, isGuestRoute]);
 
   const handleLogin = async () => {
     try {
@@ -55,6 +74,12 @@ const AppWrapper = () => {
   const handleLogout = () => {
     sessionStorage.removeItem('isAdmin');
     navigate('/view');
+  };
+
+  // Callback to pass down to ViewMode to hide spinner once data is loaded
+  const onViewModeLoadComplete = () => {
+    clearTimeout(spinnerTimeoutRef.current);
+    setShowSpinner(false);
   };
 
   return (
@@ -148,8 +173,64 @@ const AppWrapper = () => {
         </div>
       )}
 
+      {/* Spinner Overlay */}
+      {showSpinner && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(255,255,255,0.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 10000,
+            fontSize: 20,
+            fontWeight: 'bold',
+            color: '#333',
+            flexDirection: 'column',
+          }}
+        >
+          <div className="spinner" style={{ marginBottom: 15 }}>
+            {/* Simple CSS spinner */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ margin: 'auto', background: 'none', display: 'block' }}
+              width="50px"
+              height="50px"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="xMidYMid"
+            >
+              <circle
+                cx="50"
+                cy="50"
+                fill="none"
+                stroke="#333"
+                strokeWidth="10"
+                r="35"
+                strokeDasharray="164.93361431346415 56.97787143782138"
+              >
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  repeatCount="indefinite"
+                  dur="1s"
+                  values="0 50 50;360 50 50"
+                  keyTimes="0;1"
+                ></animateTransform>
+              </circle>
+            </svg>
+          </div>
+          Please wait while we load the data...
+        </div>
+      )}
+
       <Routes>
+        {/* Redirect root "/" to "/view" */}
         <Route path="/" element={<Navigate to="/view" replace />} />
+
         {isAdmin && (
           <>
             <Route path="/admin/build" element={<BuildMode />} />
@@ -157,7 +238,13 @@ const AppWrapper = () => {
             <Route path="/admin/guests" element={<GuestList />} />
           </>
         )}
-        <Route path="/view" element={<ViewMode />} />
+
+        {/* Pass onLoadComplete callback to ViewMode */}
+        <Route
+          path="/view"
+          element={<ViewMode onLoadComplete={onViewModeLoadComplete} />}
+        />
+
         <Route
           path="/guest/menu-selection/:guestToken"
           element={<GuestForm />}
@@ -167,6 +254,7 @@ const AppWrapper = () => {
           path="/guest/menu-confirmation/:guestToken"
           element={<GuestMenuConfirmation />}
         />
+
         {/* Catch unauthorized admin route access */}
         <Route
           path="/admin/*"
